@@ -1,0 +1,2398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Calculadora gratuita de licencias y antigüedad docente para PBA y CABA. Calculá fechas de retorno, vacaciones, maternidad, matrimonio y más.">
+  <meta name="keywords" content="licencias docentes, calculadora docente, PBA, CABA, estatuto docente, antigüedad docente, licencia maternidad docente, licencia matrimonio docente">
+  <meta name="author" content="Calculadora de Licencias Docentes">
+  <meta property="og:title" content="Calculadora de Licencias Docentes - PBA / CABA">
+  <meta property="og:description" content="Calculá fechas de licencias y antigüedad docente de forma orientativa.">
+  <meta property="og:type" content="website">
+  <title>Calculadora de Licencias Docentes - PBA / CABA</title>
+  <style>
+    :root {
+      --color-primario: #1e40af;
+      --color-primario-claro: #3b82f6;
+      --color-fondo: #f8fafc;
+      --color-texto: #1e293b;
+      --color-borde: #cbd5e1;
+      --color-tarjeta: #ffffff;
+      --color-ok: #10b981;
+      --color-info: #0ea5e9;
+      --color-advertencia: #f59e0b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--color-fondo);
+      color: var(--color-texto);
+      margin: 0;
+      padding: 2rem 1rem;
+      line-height: 1.5;
+    }
+
+    .contenedor { max-width: 800px; margin: 0 auto; }
+
+    header { text-align: center; margin-bottom: 2rem; }
+    header h1 { margin: 0; font-size: 1.75rem; color: var(--color-primario); }
+    header p { margin: 0.5rem 0 0; color: #64748b; }
+
+    .tarjeta {
+      background: var(--color-tarjeta);
+      border: 1px solid var(--color-borde);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    select, input[type="date"], input[type="text"], input[type="number"], textarea {
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid var(--color-borde);
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      font-family: inherit;
+    }
+
+    textarea { min-height: 80px; resize: vertical; }
+
+    .fila {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      .fila { grid-template-columns: 1fr; }
+    }
+
+    .help {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: -0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .opciones-radio {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .opciones-radio label {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-weight: normal;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .opciones-radio input[type="radio"] {
+      width: auto;
+      margin: 0;
+    }
+
+    button {
+      background: var(--color-primario);
+      color: white;
+      border: none;
+      padding: 0.85rem 1.5rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: var(--color-primario-claro); }
+
+    .resultado {
+      background: #eff6ff;
+      border-left: 5px solid var(--color-primario);
+      padding: 1.25rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .resultado.activo { display: block; }
+
+    .resultado h2 { margin: 0 0 0.5rem; font-size: 1.15rem; color: var(--color-primario); }
+
+    .resultado .fecha-grande {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-texto);
+      margin: 0.5rem 0;
+    }
+
+    .detalle { margin-top: 1rem; font-size: 0.95rem; color: #334155; }
+    .detalle ul { margin: 0.5rem 0; padding-left: 1.25rem; }
+    .detalle li { margin-bottom: 0.25rem; }
+
+    .tabla-dias {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    .tabla-dias th, .tabla-dias td {
+      border: 1px solid var(--color-borde);
+      padding: 0.5rem;
+      text-align: left;
+    }
+
+    .tabla-dias th { background: #e2e8f0; }
+
+    .dia-habil { background: #dcfce7; }
+    .dia-no-habil { background: #fee2e2; }
+    .dia-feriado { background: #fef3c7; }
+
+    .aviso {
+      background: #fff7ed;
+      border-left: 5px solid var(--color-advertencia);
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #7c2d12;
+      margin-top: 1rem;
+    }
+
+    .seccion-oculta { display: none; }
+    .seccion-visible { display: block; }
+
+    .tab-btn {
+      border: none;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .tab-btn.activo {
+      background: var(--color-primario) !important;
+    }
+
+    .item-cargo, .item-descuento {
+      background: #f8fafc;
+      border: 1px solid var(--color-borde);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .item-cargo .fila, .item-descuento .fila {
+      align-items: end;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: auto;
+    }
+
+    .checkbox-row label {
+      margin: 0;
+      font-weight: normal;
+    }
+
+    .btn-eliminar {
+      background: #ef4444 !important;
+      margin-top: 0.75rem;
+    }
+
+    .item-historial {
+      background: #f8fafc;
+      border: 1px solid var(--color-borde);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .item-historial:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-secundario {
+      background: #64748b !important;
+    }
+
+    .resumen-dias {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+
+    .resumen-dias .caja {
+      background: #ffffff;
+      border: 1px solid var(--color-borde);
+      border-radius: 8px;
+      padding: 0.75rem;
+      text-align: center;
+    }
+
+    .resumen-dias .numero {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-primario);
+    }
+
+    .resumen-dias .etiqueta {
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+
+    @media print {
+      body * { visibility: hidden; }
+      #impresionResultado, #impresionResultado * { visibility: visible; }
+      #impresionResultado {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+    }
+
+    footer { text-align: center; color: #94a3b8; font-size: 0.85rem; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <div class="contenedor">
+    <header>
+      <h1>Calculadora Docente</h1>
+      <p id="subtituloHeader">Estatuto Docente - PBA / CABA</p>
+      <p style="margin-top:0.75rem;">
+        <a id="linkCafecito" href="https://cafecito.app/tuusuario" target="_blank" rel="noopener" style="display:inline-block; background:#8B5E3C; color:#fff; padding:0.5rem 1rem; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.9rem;">
+          ☕ Invitame un café
+        </a>
+      </p>
+    </header>
+
+    <details class="tarjeta" style="padding:1rem;">
+      <summary style="font-weight:700; color:var(--color-primario); cursor:pointer;">📖 Ejemplos de uso</summary>
+      <div style="margin-top:1rem;">
+        <p><strong>Licencias:</strong></p>
+        <ul>
+          <li><strong>Matrimonio:</strong> elegí "Matrimonio", poné la fecha del evento y seleccioná si tomás los días antes, después o alrededor. Con 12 días hábiles y casamiento el 12/11/2026, la licencia termina el 30/11 y volvés el 1°/12.</li>
+          <li><strong>Maternidad:</strong> elegí "Maternidad", ingresá la FPP y los días previos (30 o 45). Con FPP 25/12/2026 y 45 días previos, empezás el 10/11 y volvés después de las vacaciones de verano.</li>
+          <li><strong>Vacaciones:</strong> si dejás marcado "Considerar vacaciones anuales", el retorno se posterga hasta después del receso de verano. Desmarcalo si no querés que intervenga.</li>
+        </ul>
+        <p><strong>Antigüedad:</strong></p>
+        <ul>
+          <li>Agregá cada cargo con inicio y fin. Si un cargo sigue vigente, dejá el fin vacío.</li>
+          <li>Si tuviste dos cargos superpuestos (ej. una suplencia mientras tenías titularidad), no se cuentan dos veces.</li>
+          <li>En "Períodos que NO suman" cargá licencias sin goce o causas particulares para descontar esos días.</li>
+        </ul>
+      </div>
+    </details>
+
+    <div id="mensajesError" class="tarjeta" style="display:none; border-left:5px solid #ef4444; background:#fef2f2; color:#7f1d1d;"></div>
+
+    <div class="tabs" style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+      <button id="tabLicencias" class="tab-btn activo" style="flex:1; background:var(--color-primario);">Licencias</button>
+      <button id="tabAntiguedad" class="tab-btn" style="flex:1; background:#94a3b8;">Antigüedad</button>
+    </div>
+
+    <!-- === SECCIÓN LICENCIAS === -->
+    <div id="seccionLicencias" class="tarjeta">
+      <label for="jurisdiccion">Jurisdicción</label>
+      <select id="jurisdiccion">
+        <option value="PBA" selected>Provincia de Buenos Aires (PBA)</option>
+        <option value="CABA">Ciudad Autónoma de Buenos Aires (CABA)</option>
+      </select>
+      <p class="help" id="ayudaJurisdiccion">Datos basados en el Estatuto Docente (Capítulo XX) y el Decreto 140/2022.</p>
+
+      <label for="licencia">Tipo de licencia</label>
+      <select id="licencia"></select>
+
+      <label for="situacion">Situación de revista</label>
+      <select id="situacion"></select>
+
+      <!-- Sección dinámica: Matrimonio -->
+      <div id="seccionMatrimonio" class="seccion-oculta">
+        <label for="fechaMatrimonio">Fecha del matrimonio</label>
+        <input type="date" id="fechaMatrimonio">
+        <label>¿Cómo se toman los días?</label>
+        <div class="opciones-radio">
+          <label><input type="radio" name="modoMatrimonio" value="despues" checked> Después del matrimonio</label>
+          <label><input type="radio" name="modoMatrimonio" value="antes"> Antes del matrimonio</label>
+          <label><input type="radio" name="modoMatrimonio" value="centrado"> Alrededor del matrimonio</label>
+          <label><input type="radio" name="modoMatrimonio" value="personalizado"> Personalizado</label>
+        </div>
+        <div id="matrimonioPersonalizado" class="seccion-oculta">
+          <div class="fila">
+            <div>
+              <label for="diasAntesMatrimonio">Días hábiles antes</label>
+              <input type="number" id="diasAntesMatrimonio" min="0" placeholder="Ej: 5">
+            </div>
+            <div>
+              <label for="diasDespuesMatrimonio">Días hábiles después</label>
+              <input type="number" id="diasDespuesMatrimonio" min="0" placeholder="Ej: 7">
+            </div>
+          </div>
+        </div>
+        <p class="help">Elegí cómo distribuir los días de licencia alrededor de la fecha del matrimonio. En "Personalizado" podés repartirlos como quieras.</p>
+      </div>
+
+      <!-- Sección dinámica: Maternidad -->
+      <div id="seccionMaternidad" class="seccion-oculta">
+        <label for="fechaFPP">Fecha probable de parto (FPP)</label>
+        <input type="date" id="fechaFPP">
+        <label for="diasPreviosMaternidad">Días de licencia previos al parto</label>
+        <select id="diasPreviosMaternidad">
+          <option value="45">45 días (máximo)</option>
+          <option value="30">30 días (mínimo)</option>
+          <option value="otro">Otro (especificar)</option>
+        </select>
+        <input type="number" id="diasPreviosOtro" class="seccion-oculta" placeholder="Días previos (entre 30 y 45)">
+        <label for="fechaNacimiento">Fecha real de nacimiento (opcional)</label>
+        <input type="date" id="fechaNacimiento">
+
+        <div id="opcionesCABAMaternidad" class="seccion-oculta" style="margin-top:1rem;">
+          <div class="checkbox-row">
+            <input type="checkbox" id="altoRiesgoCABA">
+            <label for="altoRiesgoCABA">Embarazo de alto riesgo (aumenta días previos)</label>
+          </div>
+          <input type="number" id="diasAltoRiesgoCABA" class="seccion-oculta" placeholder="Días adicionales previos" min="0">
+
+          <div class="checkbox-row" style="margin-top:0.75rem;">
+            <input type="checkbox" id="internacionNeonatalCABA">
+            <label for="internacionNeonatalCABA">Internación en neonatología (sumar días al post-parto)</label>
+          </div>
+          <input type="number" id="diasInternacionNeonatalCABA" class="seccion-oculta" placeholder="Días de internación" min="0">
+
+          <div class="checkbox-row" style="margin-top:0.75rem;">
+            <input type="checkbox" id="licenciaSinGoceCABA">
+            <label for="licenciaSinGoceCABA">Agregar 120 días corridos sin goce post-parto</label>
+          </div>
+
+          <div class="checkbox-row" style="margin-top:0.75rem;">
+            <input type="checkbox" id="transferirNoGestanteCABA">
+            <label for="transferirNoGestanteCABA">Transferir 30 días post-parto al progenitor no gestante</label>
+          </div>
+        </div>
+
+        <p class="help" id="ayudaMaternidad">Si no ponés la fecha real de nacimiento, se usa la FPP. Los días post-parto se ajustan para completar el total de días corridos.</p>
+      </div>
+
+      <!-- Sección dinámica: Nacimiento no gestante -->
+      <div id="seccionNacimientoNoGestante" class="seccion-oculta">
+        <label for="fechaNacimientoNoGestante">Fecha de nacimiento</label>
+        <input type="date" id="fechaNacimientoNoGestante">
+        <label>Modalidad</label>
+        <div class="opciones-radio">
+          <label><input type="radio" name="modoNacimiento" value="15despues" checked> 15 días corridos posteriores al nacimiento</label>
+          <label><input type="radio" name="modoNacimiento" value="5antes10despues"> 5 días antes y 10 días después del nacimiento</label>
+          <label><input type="radio" name="modoNacimiento" value="15mas30caba"> 15 días iniciales + 30 días en el primer año (CABA)</label>
+          <label><input type="radio" name="modoNacimiento" value="30primeranioCABA"> 30 días corridos no fraccionables en el primer año (CABA)</label>
+        </div>
+        <div id="fechaInicio30DiasCABA" class="seccion-oculta">
+          <label for="fechaInicio30CABA">Fecha de inicio de los 30 días (dentro del primer año)</label>
+          <input type="date" id="fechaInicio30CABA">
+        </div>
+      </div>
+
+      <!-- Fecha de inicio genérica -->
+      <div id="seccionFechaInicio" class="seccion-visible">
+        <label for="fechaInicio">Fecha de inicio de la licencia</label>
+        <input type="date" id="fechaInicio">
+      </div>
+
+      <div class="fila">
+        <div>
+          <label for="cantidadDias">Cantidad de días (opcional)</label>
+          <input type="text" id="cantidadDias" placeholder="Usar valor de la tabla">
+        </div>
+        <div>
+          <label for="primerDiaHabil">¿Empieza en día hábil?</label>
+          <select id="primerDiaHabil">
+            <option value="si">Sí</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      </div>
+      <p class="help">Si dejás el campo vacío, se usa la cantidad que figura en el estatuto. Para licencias con fecha de evento, este dato se calcula automáticamente.</p>
+
+      <div class="checkbox-row" style="margin-bottom:1rem;">
+        <input type="checkbox" id="incluirFeriadosVariables" checked>
+        <label for="incluirFeriadosVariables">Incluir feriados variables automáticos (Carnaval, Jueves Santo, Viernes Santo)</label>
+      </div>
+
+      <label for="feriados">Feriados adicionales (uno por línea, formato DD/MM/AAAA)</label>
+      <textarea id="feriados" placeholder="Ejemplo:
+17/02/2027
+18/02/2027
+02/04/2027"></textarea>
+      <p class="help">Incluí feriados puente, feriados escolares u otros que no estén en la lista fija ni se calculen automáticamente.</p>
+
+      <h3 style="margin-top:1.5rem; color:var(--color-primario);">Calendario escolar y vacaciones</h3>
+      <div class="checkbox-row" style="margin-bottom:1rem;">
+        <input type="checkbox" id="considerarVacaciones" checked>
+        <label for="considerarVacaciones">Considerar vacaciones anuales de verano en el cálculo</label>
+      </div>
+      <div class="fila">
+        <div>
+          <label for="inicioVerano">Inicio vacaciones anuales (verano)</label>
+          <input type="date" id="inicioVerano">
+        </div>
+        <div>
+          <label for="finVerano">Fin vacaciones anuales (verano)</label>
+          <input type="date" id="finVerano">
+        </div>
+      </div>
+      <div class="fila">
+        <div>
+          <label for="inicioInvierno">Inicio receso de invierno (sin clases)</label>
+          <input type="date" id="inicioInvierno">
+        </div>
+        <div>
+          <label for="finInvierno">Fin receso de invierno (sin clases)</label>
+          <input type="date" id="finInvierno">
+        </div>
+      </div>
+      <label for="antiguedadVacaciones">Antigüedad para vacaciones anuales</label>
+      <select id="antiguedadVacaciones">
+        <option value="30">Menos de 20 años - 30 días corridos (2/1 al 31/1)</option>
+        <option value="40">20 o más años - 40 días corridos (2/1 al 10/2)</option>
+        <option value="personalizado">Personalizado (usar fechas de arriba)</option>
+      </select>
+      <p class="help">Las vacaciones anuales son en verano. El receso de invierno no son vacaciones, son días sin clases. Si la licencia termina justo antes o durante alguno de estos períodos, el retorno se posterga hasta el día hábil siguiente al fin del mismo. Para licencias por días hábiles escolares, esos días no se cuentan. Elegí "Personalizado" si querés ingresar a mano las fechas de vacaciones.</p>
+
+      <button id="calcular">Calcular fecha de retorno</button>
+
+      <div id="resultado" class="resultado">
+        <h2>Fecha de retorno al trabajo</h2>
+        <div class="fecha-grande" id="fechaRetorno"></div>
+        <div class="detalle" id="ultimoDiaLicencia"></div>
+        <div class="detalle" id="detalleResultado"></div>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1rem;">
+          <button id="guardarLicencia" type="button" style="flex:1; min-width:140px; background:var(--color-info);">📋 Copiar</button>
+          <button id="imprimirLicencia" type="button" style="flex:1; min-width:140px; background:var(--color-info);">🖨️ Imprimir / PDF</button>
+          <button id="exportarLicenciaCSV" type="button" class="btn-secundario" style="flex:1; min-width:140px;">📄 Exportar CSV</button>
+          <button id="agregarACadena" type="button" class="btn-secundario" style="flex:1; min-width:140px;">➕ Agregar a cadena</button>
+        </div>
+
+        <div id="cadenaLicencias" style="display:none; margin-top:1.5rem; border-top:1px solid var(--color-borde); padding-top:1rem;">
+          <h3 style="color:var(--color-primario);">Cadena de licencias</h3>
+          <div id="listaCadenaLicencias"></div>
+          <div id="resumenCadenaLicencias" style="margin-top:1rem; padding:1rem; background:#f1f5f9; border-radius:8px;"></div>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;">
+            <button id="continuarCadena" type="button" class="btn-secundario" style="flex:1; min-width:140px;">➕ Continuar con otra licencia</button>
+            <button id="limpiarCadena" type="button" class="btn-secundario" style="flex:1; min-width:140px;">Limpiar cadena</button>
+            <button id="exportarCadenaCSV" type="button" class="btn-secundario" style="flex:1; min-width:140px;">📄 Exportar cadena</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="historialLicencias" style="display:none; margin-top:1rem;">
+        <h3 style="color:var(--color-primario);">Historial de cálculos</h3>
+        <div id="listaHistorialLicencias"></div>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;">
+          <button id="limpiarHistorialLicencias" type="button" class="btn-secundario" style="flex:1; min-width:140px;">Limpiar historial</button>
+          <button id="exportarHistorialLicenciasCSV" type="button" class="btn-secundario" style="flex:1; min-width:140px;">📄 Exportar historial</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- === SECCIÓN ANTIGÜEDAD === -->
+    <div id="seccionAntiguedad" class="tarjeta" style="display:none;">
+      <h2 style="margin-top:0; color:var(--color-primario);">Calculadora de Antigüedad</h2>
+      <p class="help">Agregá los cargos que tuviste. Si se superponen, no se cuentan dos veces. Marcá los períodos que no suman antigüedad (licencias sin goce, causas particulares, etc.). <strong>Se cuentan todos los días corridos</strong>, incluyendo fines de semana y feriados.</p>
+
+      <div id="listaCargos"></div>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+        <button id="agregarCargo" type="button" style="flex:1; min-width:140px; background:var(--color-info);">+ Agregar cargo</button>
+        <button id="exportarCargosCSV" type="button" class="btn-secundario" style="flex:1; min-width:140px;">📄 Exportar cargos</button>
+      </div>
+
+      <h3 style="color:var(--color-primario);">Períodos que NO suman antigüedad</h3>
+      <p class="help">Por ejemplo: licencias por causa particular sin goce, licencias sin goce de haberes, etc.</p>
+      <div id="listaDescuentos"></div>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+        <button id="agregarDescuento" type="button" style="flex:1; min-width:140px; background:var(--color-info);">+ Agregar período sin antigüedad</button>
+        <button id="exportarDescuentosCSV" type="button" class="btn-secundario" style="flex:1; min-width:140px;">📄 Exportar descuentos</button>
+      </div>
+
+      <button id="calcularAntiguedad">Calcular antigüedad</button>
+
+      <div id="resultadoAntiguedad" class="resultado">
+        <h2>Antigüedad reconocida</h2>
+        <div class="fecha-grande" id="textoAntiguedad"></div>
+        <div class="detalle" id="detalleAntiguedad"></div>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1rem;">
+          <button id="guardarAntiguedad" type="button" style="flex:1; min-width:140px; background:var(--color-info);">📋 Copiar</button>
+          <button id="imprimirAntiguedad" type="button" style="flex:1; min-width:140px; background:var(--color-info);">🖨️ Imprimir / PDF</button>
+        </div>
+      </div>
+
+      <div id="historialAntiguedad" style="display:none; margin-top:1rem;">
+        <h3 style="color:var(--color-primario);">Historial de cálculos</h3>
+        <div id="listaHistorialAntiguedad"></div>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;">
+          <button id="limpiarHistorialAntiguedad" type="button" class="btn-secundario" style="flex:1; min-width:140px;">Limpiar historial</button>
+          <button id="exportarHistorialAntiguedadCSV" type="button" class="btn-secundario" style="flex:1; min-width:140px;">📄 Exportar historial</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tarjeta" id="seccionBackup">
+      <h2 style="margin-top:0; color:var(--color-primario);">Copia de seguridad</h2>
+      <p class="help">Exportá todos los datos (cargos, descuentos, historial y configuración) para guardarlos o transferirlos a otra computuadora.</p>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <button id="exportarJSON" type="button" style="flex:1; min-width:140px; background:var(--color-info);">⬇️ Exportar todo</button>
+        <button id="importarJSON" type="button" style="flex:1; min-width:140px; background:var(--color-info);">⬆️ Importar todo</button>
+      </div>
+      <input type="file" id="inputImportarJSON" accept=".json" style="display:none;">
+    </div>
+
+    <div class="aviso">
+      <strong>Importante:</strong> esta calculadora es una ayuda orientativa basada en el Estatuto Docente de PBA (Capítulo XX y Decreto 140/2022) y el Estatuto Docente de CABA (Ordenanza 40.593, texto consolidado por Ley 6.347 y Decreto 313/24). Los días hábiles se calculan como días de semana (lunes a viernes) excluyendo feriados. Para casos particulares, antigüedades especiales o interpretaciones, consultá con SADOP, UDAI o tu sindicato/docente de referencia.
+    </div>
+
+    <footer>
+      Datos extraídos del Estatuto del Docente de PBA (Capítulo XX y Decreto 140/2022) y del Estatuto del Docente de CABA (Ordenanza 40.593, texto consolidado por Ley 6.347).
+    </footer>
+  </div>
+
+  <div id="impresionResultado" style="display:none;"></div>
+
+  <script>
+    // === DATOS DE LICENCIAS ===
+    const rawLicencias = [
+      ["Licencia Ordinaria por Enfermedad","Titular","114","120","C","25","A.1.1.1.","35","A.1.1.2.","60","A.1.1.3.",""],
+      ["Licencia Ordinaria por Enfermedad","Provisional","114","Hasta un máximo de 25 dias corridos o alternados","C","","","","","","",""],
+      ["Licencia Ordinaria por Enfermedad","Provisional con + de 1 año de antiguedad","114","120","C","25","A.1.2.","35","A.1.2.","60","A.1.2.",""],
+      ["Licencia Ordinaria por Enfermedad","Suplente","114","3 por cada mes trabajado, hasta un máximo de 20 por año calendario","","","","","","","",""],
+      ["Licencia Ordinaria por Enfermedad","Suplente con + de 1 año de antiguedad","114","120","C","25","A.1.3.","35","A.1.3.","60","A.1.2.",""],
+      ["Licencia Extraordinaria por Enfermedad","Titular con - de 5 años de antiguedad","114","725","C","365","A.2.1.1.","180","A.2.1.2.","180","A.2.1.3",""],
+      ["Licencia Extraordinaria por Enfermedad","Titular que pasa a tener + de 5 años y ya usó la licencia","114","365","C","-","-","180","A.2.4.1","180","A.2.4.2",""],
+      ["Licencia Extraordinaria por Enfermedad","Titular con + de 5 años de antiguedad","114","1095","C","365","A.2.2.1.","365","A.2.2.2.","365","A.2.2.3.",""],
+      ["Licencia Extraordinaria por Enfermedad","Provisional","114","1095","C","365","A.2.6","365","","365","",""],
+      ["Licencia Extraordinaria por Enfermedad","Suplente","114","-","","-","A.2.7.","-","-","-","-",""],
+      ["Enfermedad Crónica","Titular","114","Sin límite","","","","","","","",""],
+      ["Enfermedad Crónica","Provisional","114","365","C","365","A.2.8","","","","",""],
+      ["Enfermedad Crónica","Suplente","114","","","","","","","","",""],
+      ["Licencia por Enfermedad Profesional y/o Accidente","Todos","114","1095","C","1095","A.3","-","-","-","-","Continuos o Alternados"],
+      ["Por Exámenes medicos preventivos","Todos","114","2","H","2","A","","","","",""],
+      ["Tratamiento de fertilizacion asistida","Titular","114","A. F.E.R. Complejidad 1 (Baja) = hasta 9 días / A. F.E.R. Complejidad 2 (Alta) = hasta 15 días CORRIDOS","C","","","","","","",""],
+      ["Tratamiento de fertilizacion asistida","Provisional","114","","","","","","","","",""],
+      ["Tratamiento de fertilizacion asistida","Suplente","114","","","","","","","","",""],
+      ["Por Exámen Médico Pre Matrimonial y/o prácticas de prevención","Todos","114","2","H","2","B.1.","","","","",""],
+      ["Matrimonio","Titular","114","12","H","12","C.1","","","","",""],
+      ["Matrimonio","Provisional","114","12","H","12","C.1","","","","",""],
+      ["Matrimonio","Suplente","114","6","H","6","C.2","","","","",""],
+      ["Maternidad","Titular","114","135","C","135","D.1.1.","","","","",""],
+      ["Nacimiento múltiple o prematuro","Titular","114","150","C","150","D.1.2","","","","",""],
+      ["Nacimiento prematuro antes del 7mo mes","Titular","114","","C"," Se adicionan los días que faltan para llegar al 7mo mes y medio","","D.1.3.","","","",""],
+      ["Nacimiento - No Gestante","","114","15","H","15","A7","","","","","Opción 5 días antes y 10 después"],
+      ["Cuidado del Recién Nacido - No Gestante","","114","45","C","45","B","","","","","Esos 30 días se deducen del periodo del no gestante"],
+      ["Cuidado del Recién Nacido - Gestante","","114","30","C","30","","","","","",""],
+      ["Cuidado del Recién Nacido - Hijo con Discapacidad","","114","180","C","180","","","","","","Se puede fraccionar entre los responsables parentales"],
+      ["Fallecimiento del bebé en el nacimiento","Titular","114","45","C","45","D.1.4.1","","","","",""],
+      ["Fallecimiento en los primeros 45 dias","Titular","114","45","C","45","D.1.4.2","","","","",""],
+      ["Defunción fetal Post 7° mes","Titular","114","30","C","30","D.1.4.3","","","","",""],
+      ["Defunción fetal entre el 4° y el 7° mes","Titular","114","15","C","15","D.1.5.","","","","",""],
+      ["Excedencia","Titular","114","180","C","","D.1.11","","","180","",""],
+      ["Excedencia - Hijo con discapacidad","Titular","114","180","C","180","D.1.12","","","","",""],
+      ["Excedencia - Adopción","Titular","114","180","C","180","D.1.13","","","","",""],
+      ["Adopción - Personal femenino","Todos","114","90","C","90","D.2.1","","","","",""],
+      ["Adopción - Personal masculino","Todos","114","5","C","","","","","","",""],
+      ["Adopción Múltiple - Personal femenino","Todos","114","105","C","105","","","","","",""],
+      ["Familiar Enfermo","Titular","114","20","C","20","F","-","-","30","",""],
+      ["Familiar Enfermo","Provisional","114","20","C","20","F","-","-","30","","Siempre que no excedas la decima parte de los servicios prestados en el año"],
+      ["Familiar Enfermo","Suplente","114","2","H","2","","","","","",""],
+      ["Donación de sangre","Todos","114","1","","1","","","","","",""],
+      ["Duelo Familiar: Madre, padre, cónyuge, hijo, hermano, nieto","Todos","114","5","C","5","","","","","",""],
+      ["Duelo Familiar: abuelos, padrastros, hijastros","Todos","114","3","C","3","","","","","",""],
+      ["Adaptación escolar","Todos","140","Variable","H","","","","","","","Días y horas que disponga la autoridad educativa"],
+      ["Fallecimiento de corresponsable parental","Todos","140","45","C","45","","","","","","Para trabajador/a con hijos/as menores de 18 años o con discapacidad sin límite de edad"],
+      ["Mujer víctima de violencia","Todos","140","35","C","35","","","","","","Prorrogables por otros 35 días (máx. 70 días/año)"],
+      ["Permiso por causa o trámites particulares","Todos","140","6","H","6","","","","","","Máx. 6 días por año calendario"],
+      ["Tratamiento de fertilización asistida","Todos","140","70","C","70","","","","","","Máx. 70 días por año calendario (35+35 prorrogables)"],
+      ["Por abrigo","Todos","140","90","C","90","","","","","","Menor a 1 año en guarda, tutela o responsabilidad parental"],
+      ["Por trámite de adopción","Todos","140","10","C","10","","","","","","Máx. 10 días por año calendario"],
+      ["Franquicia por alimentación y cuidado de hijo/a","Todos","140","2 hs diarias","H","","","","","","","2 horas diarias (modalidad a elección)"],
+      ["Donación de órganos","Todos","114","2 a 180","C","","","","","","","Según prescripción de la Junta Médica"],
+      ["Servicio Militar Obligatorio","Todos","114","Duración de la convocatoria","C","","","","","","","Con goce del 50% de haberes"],
+      ["Incorporación a reserva de FF.AA.","Todos","114","Duración del llamado","C","","","","","","","Según situación de haberes percibidos"],
+      ["Unidad Familiar","Titular y Provisional","114","3 años","","0","","","","","",""],
+      ["Familar a cargo","Titular y Provisional","114","2 años","","0","","","","","",""],
+      ["Vacaciones: Docente con + de 20 años","Todos","114","40","C","40","","","","","","Interrumpe vacaciones: Licencias extraordinarias, accidente de trabajo, enfermedad crónica, maternidad, duelo"],
+      ["Vacaciones: Docente con - de 20 años","Todos","114","30","C","30","","","","","",""],
+      ["Causas Particulares: 5 años cumplidos","Titular y Provisional","114","180","C","0","","","","","","Tope: 6 meses corridos. Se puede fraccionar. El empleador se puede negar"],
+      ["Causas Particulares: 10 años cumplidos","Titular y Provisional","114","365","C","0","","","","","","Tope: 12 meses corridos. Se puede fraccionar"],
+      ["Causas Particulares: 15 años cumplidos","Titular y Provisional","114","545","C","0","","","","","","Tope: 18 meses corridos. Se puede fraccionar"],
+      ["Causas Particulares: 20 años cumplidos","Titular y Provisional","114","730","C","0","","","","","","Tope: 24 meses corridos. Se puede fraccionar"],
+      ["Estudio o perfeccionamiento","Titular y Provisional","115","ilimitado","","0","A","","","","",""],
+      ["Representación Gremial","Titular y Provisional","115","","","","B","","","","",""],
+      ["Delegados Gremiales","Titular y Provisional","115","1 al mes","","1","B","","","","",""],
+      ["Actividad de interés público o del estado","Titular y Provisional","115","-","","0","C","","","","",""],
+      ["Cargo de Mayor Jerarquía","Titular y Provisional","115","Mientras dure el cargo","","0","D","","","","","Siempre que el cargo no goce de estabilidad (suplencia)"],
+      ["Electivos o Representación Política","Titular y Provisional","115","Por el mandato","","0","E","","","","",""],
+      ["Pre examen y examen","Todos","114","12","H","","","","","","","Máximo 3 seguidos"]
+    ];
+
+    const rawLicenciasCABA = [
+      ["Licencia Ordinaria Anual por Vacaciones","Todos","68","30","H","30","","","","","","Se computan por días hábiles calendario durante el receso escolar más prolongado"],
+      ["Licencia Especial por Afecciones Comunes","Todos","69","45","C","45","a","","","","","Hasta 45 días corridos por año calendario con goce íntegro. Continua o discontinua"],
+      ["Licencia Especial por Largo Tratamiento","Todos","69","730","C","730","b","","","","","Hasta 2 años con goce íntegro. Enfermedades crónicas terminales/invalidantes: sin límite con goce íntegro"],
+      ["Licencia Especial por Accidente de Servicio","Todos","69","730","C","730","c","","","","","Hasta 2 años con goce íntegro, luego 1 año al 75%"],
+      ["Matrimonio","Todos","69","10","H","10","m","","","","","10 días hábiles con goce íntegro. Se pueden adicionar a la licencia anual"],
+      ["Matrimonio de hijos/as","Todos","69","2","H","2","n","","","","","2 días hábiles con goce íntegro, continuos o discontinuos"],
+      ["Maternidad / Embarazo y nacimiento","Gestante","69","165","C","165","ch","","","","","45 días corridos antes del nacimiento + 120 días corridos después. Con goce íntegro"],
+      ["Maternidad - Alumbramiento sin vida","Gestante","69","90","C","90","ch","","","","","90 días corridos con goce íntegro desde la circunstancia acreditada"],
+      ["Maternidad - Aborto espontáneo o terapéutico","Gestante","69","20","C","20","ch","","","","","20 días corridos con goce íntegro"],
+      ["Adopción - hasta 3 años","Todos","69","120","C","120","d","","","","","120 días corridos con goce íntegro desde la notificación de guarda"],
+      ["Adopción - 3 a 6 años","Todos","69","150","C","150","d","","","","","150 días corridos con goce íntegro"],
+      ["Adopción - 6 a 10 años","Todos","69","180","C","180","d","","","","","180 días corridos con goce íntegro"],
+      ["Adopción - 10 a 18 años","Todos","69","210","C","210","d","","","","","210 días corridos con goce íntegro"],
+      ["Adopción - Coadoptante no usufructuante","Todos","69","15","C","15","d","","","","","15 días corridos a partir de la notificación de guarda"],
+      ["Adopción - Coadoptante 30 días primer año","Todos","69","30","C","30","d","","","","","30 días corridos no fraccionables en el primer año"],
+      ["Adopción - 120 días sin goce","Todos","69","120","C","0","","","","","120","","Hasta 120 días corridos sin goce dentro del primer año"],
+      ["Cuidado de familiar enfermo","Todos","69","30","H","30","e","","","","","Hasta 30 días hábiles/año con goce. Otros 30 días sin goce a solo efecto de retención de cargo"],
+      ["Fallecimiento de cónyuge/padres/hijos","Todos","69","6","H","6","r","","","","","6 días hábiles con goce íntegro"],
+      ["Fallecimiento de hermanos/abuelos/suegros","Todos","69","3","H","3","r","","","","","3 días hábiles con goce íntegro"],
+      ["Nacimiento - No Gestante","No gestante","69","15","C","15","q","","","","","15 días corridos a partir del nacimiento. Más 30 días corridos no fraccionables en el primer año"],
+      ["Estudios / Exámenes","Todos","69","28","H","28","k","","","","","Hasta 28 días hábiles/año para rendir exámenes oficiales"],
+      ["Justificaciones por razones particulares","Todos","69","6","H","6","t","","","","","Hasta 6 días/año, máximo 2 días por mes"],
+      ["Donación de sangre","Todos","69","3","H","3","u","","","","","Hasta 3 días/año, 1 día laborable por oportunidad"],
+      ["Controles preventivos de cáncer","Todos","69","1","H","1","p","","","","","1 día hábil/año para controles mamarios o prostáticos"],
+      ["Violencia de género","Todos","69","20","H","20","y","","","","","Hasta 20 días hábiles/año con goce. Prorrogable"],
+      ["Reproducción asistida","Todos","69","30","H","30","aa","","","","","Hasta 30 días/año con goce íntegro, continuos o discontinuos"],
+      ["Perfeccionamiento (cada 7 años)","Titular","69","365","C","365","l","","","","","Hasta 1 año con goce íntegro cada 7 años de ejercicio"]
+    ];
+
+    let jurisdiccion = 'PBA';
+    let licencias = [];
+    function cargarDatosJurisdiccion(j) {
+      jurisdiccion = j;
+      const raw = j === 'CABA' ? rawLicenciasCABA : rawLicencias;
+      licencias = raw.map(fila => ({
+        tipo: fila[0].trim() || null,
+        situacion: fila[1].trim() || 'No especificada',
+        articulo: fila[2].trim(),
+        dias: fila[3].trim(),
+        tipoDia: fila[4].trim().toUpperCase(),
+        goce100: fila[5].trim(),
+        cod100: fila[6].trim(),
+        goce50: fila[7].trim(),
+        cod50: fila[8].trim(),
+        sinGoce: fila[9].trim(),
+        codSinGoce: fila[10].trim(),
+        observaciones: fila[11].trim()
+      }));
+      let ultimoTipo = '';
+      licencias.forEach(l => { if (l.tipo) ultimoTipo = l.tipo; else l.tipo = ultimoTipo; });
+      tiposUnicos = [...new Set(licencias.map(l => l.tipo))];
+    }
+
+    cargarDatosJurisdiccion('PBA');
+
+    // === FERIADOS FIJOS DE ARGENTINA (DD-MM) ===
+    const feriadosFijos = [
+      "01-01", "24-03", "02-04", "01-05", "25-05",
+      "17-06", "20-06", "09-07", "17-08", "12-10",
+      "20-11", "08-12", "25-12"
+    ];
+
+    function parseFeriadosAdicionales(texto) {
+      const lineas = texto.split(/\n/);
+      const feriados = new Set();
+      for (const linea of lineas) {
+        const limpio = linea.trim();
+        if (!limpio) continue;
+        const partes = limpio.split(/[\/\-]/);
+        if (partes.length === 3) {
+          let [d, m, a] = partes;
+          feriados.add(`${a.padStart(4,'0')}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`);
+        }
+      }
+      return feriados;
+    }
+
+    function esFeriado(fecha, adicionales) {
+      const ddmm = `${String(fecha.getDate()).padStart(2, '0')}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+      const yyyymmdd = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+      if (feriadosFijos.includes(ddmm)) return true;
+      if (adicionales && adicionales.has(yyyymmdd)) return true;
+      return false;
+    }
+
+    function parseReceso(inputInicio, inputFin, nombre) {
+      const inicio = fechaDesdeInput(inputInicio);
+      const fin = fechaDesdeInput(inputFin);
+      if (!inicio || !fin || inicio > fin) return null;
+      return { inicio, fin, nombre };
+    }
+
+    function esReceso(fecha, recesos) {
+      if (!recesos) return false;
+      for (const r of recesos) {
+        if (fecha >= r.inicio && fecha <= r.fin) return true;
+      }
+      return false;
+    }
+
+    function esDiaHabil(fecha, adicionales) {
+      // Día hábil de calendario: de lunes a viernes, sin feriados.
+      // Los recesos escolares/vacaciones NO lo convierten en inhábil para el cómputo de la licencia.
+      const diaSemana = fecha.getDay();
+      if (diaSemana === 0 || diaSemana === 6) return false;
+      if (esFeriado(fecha, adicionales)) return false;
+      return true;
+    }
+
+    function esDiaEscolar(fecha, adicionales, recesos) {
+      // Día hábil escolar: día hábil de calendario que no está en receso/vacaciones.
+      return esDiaHabil(fecha, adicionales) && !esReceso(fecha, recesos);
+    }
+
+    function clonarFecha(f) { return new Date(f.getFullYear(), f.getMonth(), f.getDate()); }
+
+    function fechaDesdeInput(input) {
+      // Lee un <input type="date"> y devuelve una fecha en horario local,
+      // evitando el problema de valueAsDate que devuelve UTC.
+      if (!input || !input.value) return null;
+      const [a, m, d] = input.value.split('-').map(Number);
+      return new Date(a, m - 1, d);
+    }
+
+    function sumarDiasCorridos(fechaInicio, cantidad) {
+      const fecha = clonarFecha(fechaInicio);
+      fecha.setDate(fecha.getDate() + cantidad);
+      return fecha;
+    }
+
+    function sumarDiasHabiles(fechaInicio, cantidad, adicionales, primerDiaHabil = true) {
+      const fecha = clonarFecha(fechaInicio);
+      let diasSumados = 0;
+      if (primerDiaHabil) {
+        // El día de inicio cuenta como día 1 si es hábil
+        if (esDiaHabil(fecha, adicionales)) diasSumados = 1;
+      }
+      while (diasSumados < cantidad) {
+        fecha.setDate(fecha.getDate() + 1);
+        if (esDiaHabil(fecha, adicionales)) diasSumados++;
+      }
+      return fecha;
+    }
+
+    function encontrarDiaHabilAnterior(fecha, adicionales) {
+      const f = clonarFecha(fecha);
+      do {
+        f.setDate(f.getDate() - 1);
+      } while (!esDiaHabil(f, adicionales));
+      return f;
+    }
+
+    function retrocederDiasHabiles(fecha, cantidad, adicionales) {
+      // Encuentra la fecha tal que entre ella y `fecha` (inclusive) hay `cantidad` días hábiles
+      const f = clonarFecha(fecha);
+      let contados = 0;
+      while (contados < cantidad) {
+        if (esDiaHabil(f, adicionales)) contados++;
+        if (contados < cantidad) f.setDate(f.getDate() - 1);
+      }
+      return f;
+    }
+
+    function siguienteDiaHabil(fecha, adicionales) {
+      const f = clonarFecha(fecha);
+      do {
+        f.setDate(f.getDate() + 1);
+      } while (!esDiaHabil(f, adicionales));
+      return f;
+    }
+
+    function siguienteDiaEscolar(fecha, adicionales, recesos) {
+      // Primer día hábil escolar después de una fecha, saltando recesos/vacaciones.
+      const f = clonarFecha(fecha);
+      do {
+        f.setDate(f.getDate() + 1);
+      } while (!esDiaEscolar(f, adicionales, recesos));
+      return f;
+    }
+
+    // Genera lista de días corridos entre inicio y fin inclusive
+    function listarDiasCorridos(inicio, fin) {
+      const dias = [];
+      const f = clonarFecha(inicio);
+      while (f <= fin) {
+        dias.push(clonarFecha(f));
+        f.setDate(f.getDate() + 1);
+      }
+      return dias;
+    }
+
+    // Genera lista de días hábiles
+    function listarDiasHabiles(inicio, cantidad, adicionales, primerDiaHabil = true) {
+      const dias = [];
+      const f = clonarFecha(inicio);
+      let diasSumados = 0;
+      if (primerDiaHabil && esDiaHabil(f, adicionales)) {
+        dias.push(clonarFecha(f));
+        diasSumados = 1;
+      }
+      while (diasSumados < cantidad) {
+        f.setDate(f.getDate() + 1);
+        if (esDiaHabil(f, adicionales)) {
+          dias.push(clonarFecha(f));
+          diasSumados++;
+        }
+      }
+      return dias;
+    }
+
+    function formatearFecha(fecha) {
+      const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      return fecha.toLocaleDateString('es-AR', opciones);
+    }
+
+    function formatearFechaCorta(fecha) {
+      return fecha.toLocaleDateString('es-AR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    function extraerNumero(texto) {
+      const match = String(texto).match(/\d+/);
+      return match ? parseInt(match[0], 10) : null;
+    }
+
+    function diasEntre(inicio, fin) {
+      const uno = clonarFecha(inicio);
+      const dos = clonarFecha(fin);
+      return Math.round((dos - uno) / (1000 * 60 * 60 * 24));
+    }
+
+    function yyyyMMdd(fecha) {
+      return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+    }
+
+    function vacacionesPorDefecto(fechaReferencia, diasVacaciones, esCABA = false, adicionales = new Set()) {
+      // Estatuto Docente: vacaciones anuales desde el 2 de enero.
+      // 30 días: hasta el 31 de enero. 40 días: hasta el 10 de febrero.
+      let anio = fechaReferencia.getFullYear();
+      const mes = fechaReferencia.getMonth(); // 0-based
+      if (mes >= 1) anio += 1; // Si es febrero o después, las vacaciones son del año siguiente
+      const inicio = new Date(anio, 0, 2);
+      let fin;
+      if (esCABA) {
+        // En CABA las vacaciones se computan por días hábiles calendario
+        fin = sumarDiasHabiles(inicio, diasVacaciones, adicionales, true);
+      } else {
+        fin = new Date(anio, 0, 2 + diasVacaciones - 1);
+      }
+      return { inicio, fin };
+    }
+
+    function mostrarError(mensaje) {
+      const div = document.getElementById('mensajesError');
+      div.textContent = mensaje;
+      div.style.display = 'block';
+      div.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function limpiarError() {
+      const div = document.getElementById('mensajesError');
+      div.textContent = '';
+      div.style.display = 'none';
+    }
+
+    function calcularPascua(anio) {
+      // Algoritmo de Meeus/Jones/Butcher
+      const a = anio % 19;
+      const b = Math.floor(anio / 100);
+      const c = anio % 100;
+      const d = Math.floor(b / 4);
+      const e = b % 4;
+      const f = Math.floor((b + 8) / 25);
+      const g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4);
+      const k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const mes = Math.floor((h + l - 7 * m + 114) / 31); // 3 = marzo, 4 = abril
+      const dia = ((h + l - 7 * m + 114) % 31) + 1;
+      return new Date(anio, mes - 1, dia);
+    }
+
+    function feriadosVariables(anio) {
+      const pascua = calcularPascua(anio);
+      const feriados = [];
+      const agregar = (dias) => {
+        const f = clonarFecha(pascua);
+        f.setDate(f.getDate() + dias);
+        feriados.push(f);
+      };
+      agregar(-48); // Lunes de Carnaval
+      agregar(-47); // Martes de Carnaval
+      agregar(-3);  // Jueves Santo
+      agregar(-2);  // Viernes Santo
+      return feriados;
+    }
+
+    function agregarFeriadosVariables(feriadosSet, fechaInicio, fechaFin) {
+      if (!fechaInicio || !fechaFin || fechaInicio > fechaFin) return;
+      const anioInicio = fechaInicio.getFullYear();
+      const anioFin = fechaFin.getFullYear();
+      for (let anio = anioInicio; anio <= anioFin; anio++) {
+        feriadosVariables(anio).forEach(f => {
+          const yyyymmdd = yyyyMMdd(f);
+          feriadosSet.add(yyyymmdd);
+        });
+      }
+    }
+
+    function formatearFechaHora() {
+      const ahora = new Date();
+      return ahora.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function agregarHistorial(tipo, titulo, detalle) {
+      const clave = tipo === 'licencia' ? 'historialLicencias' : 'historialAntiguedad';
+      const historial = JSON.parse(localStorage.getItem(clave) || '[]');
+      historial.unshift({ fecha: formatearFechaHora(), titulo, detalle });
+      if (historial.length > 10) historial.pop();
+      localStorage.setItem(clave, JSON.stringify(historial));
+      mostrarHistorial(tipo);
+    }
+
+    function mostrarHistorial(tipo) {
+      const clave = tipo === 'licencia' ? 'historialLicencias' : 'historialAntiguedad';
+      const contenedor = document.getElementById(tipo === 'licencia' ? 'historialLicencias' : 'historialAntiguedad');
+      const lista = document.getElementById(tipo === 'licencia' ? 'listaHistorialLicencias' : 'listaHistorialAntiguedad');
+      const historial = JSON.parse(localStorage.getItem(clave) || '[]');
+      if (historial.length === 0) {
+        contenedor.style.display = 'none';
+        return;
+      }
+      contenedor.style.display = 'block';
+      lista.innerHTML = '';
+      historial.forEach((h, i) => {
+        const item = document.createElement('div');
+        item.className = 'item-historial';
+        item.innerHTML = `<span><strong>${h.fecha}</strong> — ${h.titulo}</span>`;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-eliminar';
+        btn.style.margin = '0';
+        btn.textContent = 'Eliminar';
+        btn.addEventListener('click', (e) => { e.stopPropagation(); eliminarHistorial(tipo, i); });
+        item.appendChild(btn);
+        item.addEventListener('click', () => {
+          const detalleId = tipo === 'licencia' ? 'detalleResultado' : 'detalleAntiguedad';
+          const resultadoId = tipo === 'licencia' ? 'resultado' : 'resultadoAntiguedad';
+          document.getElementById(detalleId).innerHTML = h.detalle;
+          document.getElementById(resultadoId).classList.add('activo');
+          document.getElementById(resultadoId).scrollIntoView({ behavior: 'smooth' });
+        });
+        lista.appendChild(item);
+      });
+    }
+
+    function eliminarHistorial(tipo, index) {
+      const clave = tipo === 'licencia' ? 'historialLicencias' : 'historialAntiguedad';
+      const historial = JSON.parse(localStorage.getItem(clave) || '[]');
+      historial.splice(index, 1);
+      localStorage.setItem(clave, JSON.stringify(historial));
+      mostrarHistorial(tipo);
+    }
+
+    function limpiarHistorial(tipo) {
+      const clave = tipo === 'licencia' ? 'historialLicencias' : 'historialAntiguedad';
+      localStorage.removeItem(clave);
+      mostrarHistorial(tipo);
+    }
+
+    // === CADENA DE LICENCIAS ===
+    function cargarCadena() {
+      licenciasEncadenadas = JSON.parse(localStorage.getItem('cadenaLicencias') || '[]');
+      renderizarCadena();
+    }
+
+    function guardarCadena() {
+      localStorage.setItem('cadenaLicencias', JSON.stringify(licenciasEncadenadas));
+      renderizarCadena();
+    }
+
+    function fechaDesdeYMD(str) {
+      const [a, m, d] = str.split('-').map(Number);
+      return new Date(a, m - 1, d);
+    }
+
+    function obtenerParametrosActuales() {
+      return {
+        jurisdiccion: selJurisdiccion.value,
+        licencia: selLicencia.value,
+        situacion: selSituacion.value,
+        fechaInicio: inputFechaInicio.value,
+        cantidadDias: inputCantidad.value,
+        primerDiaHabil: selectPrimerDiaHabil.value,
+        fechaMatrimonio: document.getElementById('fechaMatrimonio').value,
+        modoMatrimonio: document.querySelector('input[name="modoMatrimonio"]:checked')?.value,
+        diasAntesMatrimonio: document.getElementById('diasAntesMatrimonio').value,
+        diasDespuesMatrimonio: document.getElementById('diasDespuesMatrimonio').value,
+        fechaFPP: document.getElementById('fechaFPP').value,
+        diasPreviosMaternidad: document.getElementById('diasPreviosMaternidad').value,
+        diasPreviosOtro: document.getElementById('diasPreviosOtro').value,
+        fechaNacimiento: document.getElementById('fechaNacimiento').value,
+        altoRiesgoCABA: document.getElementById('altoRiesgoCABA').checked,
+        diasAltoRiesgoCABA: document.getElementById('diasAltoRiesgoCABA').value,
+        internacionNeonatalCABA: document.getElementById('internacionNeonatalCABA').checked,
+        diasInternacionNeonatalCABA: document.getElementById('diasInternacionNeonatalCABA').value,
+        licenciaSinGoceCABA: document.getElementById('licenciaSinGoceCABA').checked,
+        transferirNoGestanteCABA: document.getElementById('transferirNoGestanteCABA').checked,
+        fechaNacimientoNoGestante: document.getElementById('fechaNacimientoNoGestante').value,
+        modoNacimiento: document.querySelector('input[name="modoNacimiento"]:checked')?.value,
+        fechaInicio30CABA: document.getElementById('fechaInicio30CABA').value,
+        considerarVacaciones: checkboxConsiderarVacaciones.checked,
+        antiguedadVacaciones: selectAntiguedadVacaciones.value,
+        inicioVerano: inputInicioVerano.value,
+        finVerano: inputFinVerano.value,
+        inicioInvierno: inputInicioInvierno.value,
+        finInvierno: inputFinInvierno.value,
+        feriados: inputFeriados.value,
+        incluirFeriadosVariables: document.getElementById('incluirFeriadosVariables').checked
+      };
+    }
+
+    function restaurarParametros(p) {
+      selJurisdiccion.value = p.jurisdiccion || 'PBA';
+      selJurisdiccion.dispatchEvent(new Event('change'));
+      selLicencia.value = p.licencia || '';
+      selLicencia.dispatchEvent(new Event('change'));
+      setTimeout(() => {
+        selSituacion.value = p.situacion || '0';
+        selSituacion.dispatchEvent(new Event('change'));
+      }, 0);
+      inputFechaInicio.value = p.fechaInicio || '';
+      inputCantidad.value = p.cantidadDias || '';
+      selectPrimerDiaHabil.value = p.primerDiaHabil || 'si';
+      document.getElementById('fechaMatrimonio').value = p.fechaMatrimonio || '';
+      if (p.modoMatrimonio) {
+        const radio = document.querySelector(`input[name="modoMatrimonio"][value="${p.modoMatrimonio}"]`);
+        if (radio) radio.checked = true;
+      }
+      document.getElementById('diasAntesMatrimonio').value = p.diasAntesMatrimonio || '';
+      document.getElementById('diasDespuesMatrimonio').value = p.diasDespuesMatrimonio || '';
+      document.getElementById('fechaFPP').value = p.fechaFPP || '';
+      document.getElementById('diasPreviosMaternidad').value = p.diasPreviosMaternidad || '45';
+      document.getElementById('diasPreviosOtro').value = p.diasPreviosOtro || '';
+      document.getElementById('fechaNacimiento').value = p.fechaNacimiento || '';
+      document.getElementById('altoRiesgoCABA').checked = !!p.altoRiesgoCABA;
+      document.getElementById('diasAltoRiesgoCABA').value = p.diasAltoRiesgoCABA || '';
+      document.getElementById('internacionNeonatalCABA').checked = !!p.internacionNeonatalCABA;
+      document.getElementById('diasInternacionNeonatalCABA').value = p.diasInternacionNeonatalCABA || '';
+      document.getElementById('licenciaSinGoceCABA').checked = !!p.licenciaSinGoceCABA;
+      document.getElementById('transferirNoGestanteCABA').checked = !!p.transferirNoGestanteCABA;
+      document.getElementById('fechaNacimientoNoGestante').value = p.fechaNacimientoNoGestante || '';
+      if (p.modoNacimiento) {
+        const radio = document.querySelector(`input[name="modoNacimiento"][value="${p.modoNacimiento}"]`);
+        if (radio) radio.checked = true;
+      }
+      document.getElementById('fechaInicio30CABA').value = p.fechaInicio30CABA || '';
+      checkboxConsiderarVacaciones.checked = p.considerarVacaciones !== false;
+      selectAntiguedadVacaciones.value = p.antiguedadVacaciones || '30';
+      inputInicioVerano.value = p.inicioVerano || '';
+      inputFinVerano.value = p.finVerano || '';
+      inputInicioInvierno.value = p.inicioInvierno || '';
+      inputFinInvierno.value = p.finInvierno || '';
+      inputFeriados.value = p.feriados || '';
+      const chkVariables = document.getElementById('incluirFeriadosVariables');
+      if (chkVariables) chkVariables.checked = p.incluirFeriadosVariables !== false;
+      // Actualizar UI dependiente
+      document.getElementById('diasPreviosMaternidad')?.dispatchEvent(new Event('change'));
+      document.querySelectorAll('input[name="modoMatrimonio"]').forEach(r => r.dispatchEvent(new Event('change')));
+      document.querySelectorAll('input[name="modoNacimiento"]').forEach(r => r.dispatchEvent(new Event('change')));
+    }
+
+    function renderizarCadena() {
+      if (licenciasEncadenadas.length === 0) {
+        divCadena.style.display = 'none';
+        return;
+      }
+      divCadena.style.display = 'block';
+      let html = '<table class="tabla-dias"><thead><tr><th>#</th><th>Tipo</th><th>Inicio</th><th>Fin</th><th>Retorno</th><th>Días</th><th></th></tr></thead><tbody>';
+      licenciasEncadenadas.forEach((l, i) => {
+        html += `<tr>
+          <td>${i + 1}</td>
+          <td>${l.tipo}</td>
+          <td>${formatearFechaCorta(fechaDesdeYMD(l.fechaInicio))}</td>
+          <td>${formatearFechaCorta(fechaDesdeYMD(l.fechaFin))}</td>
+          <td>${formatearFechaCorta(fechaDesdeYMD(l.fechaRetorno))}</td>
+          <td>${l.dias} ${l.tipoDia === 'H' ? 'háb.' : 'corr.'}</td>
+          <td>
+            <button type="button" class="btn-secundario" onclick="editarCadena(${i})" style="margin:0 0.25rem 0 0;">Editar</button>
+            <button type="button" class="btn-eliminar" onclick="eliminarDeCadena(${i})" style="margin:0;">Eliminar</button>
+          </td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      divListaCadena.innerHTML = html;
+
+      const primera = licenciasEncadenadas[0];
+      const ultima = licenciasEncadenadas[licenciasEncadenadas.length - 1];
+      const totalDias = licenciasEncadenadas.reduce((sum, l) => sum + l.dias, 0);
+      divResumenCadena.innerHTML = `
+        <strong>Resumen de la cadena</strong><br>
+        Desde: ${formatearFecha(fechaDesdeYMD(primera.fechaInicio))}<br>
+        Próximo retorno: ${formatearFecha(fechaDesdeYMD(ultima.fechaRetorno))}<br>
+        Total de días de licencia: ${totalDias} (${licenciasEncadenadas.length} licencias)
+      `;
+    }
+
+    window.eliminarDeCadena = function(index) {
+      licenciasEncadenadas.splice(index, 1);
+      guardarCadena();
+    };
+
+    window.editarCadena = function(index) {
+      const lic = licenciasEncadenadas[index];
+      if (!lic || !lic.parametros) { mostrarError('No se pueden editar los parámetros de esta licencia.'); return; }
+      if (!confirm('Al editar esta licencia se eliminarán las siguientes de la cadena. ¿Continuar?')) return;
+      licenciasEncadenadas = licenciasEncadenadas.slice(0, index);
+      guardarCadena();
+      restaurarParametros(lic.parametros);
+      document.getElementById('seccionLicencias').scrollIntoView({ behavior: 'smooth' });
+    };
+
+    function limpiarCadena() {
+      licenciasEncadenadas = [];
+      localStorage.removeItem('cadenaLicencias');
+      renderizarCadena();
+    }
+
+    function agregarACadena() {
+      if (!ultimoCalculo) { mostrarError('Primero calculá una licencia.'); return; }
+      // Validar que no se superponga con la última licencia de la cadena
+      if (licenciasEncadenadas.length > 0) {
+        const ultima = licenciasEncadenadas[licenciasEncadenadas.length - 1];
+        const inicioNuevo = new Date(ultimoCalculo.fechaInicio);
+        const finUltima = new Date(ultima.fechaFin);
+        if (inicioNuevo < finUltima) {
+          mostrarError('La nueva licencia se superpone con la anterior. Verificá las fechas.');
+          return;
+        }
+      }
+      licenciasEncadenadas.push({ ...ultimoCalculo });
+      guardarCadena();
+    }
+
+    function continuarCadena() {
+      if (licenciasEncadenadas.length === 0) { mostrarError('La cadena está vacía.'); return; }
+      const ultima = licenciasEncadenadas[licenciasEncadenadas.length - 1];
+      // Buscar una licencia genérica que use fecha de inicio
+      const opciones = Array.from(selLicencia.options);
+      const generica = opciones.find(o =>
+        !o.value.includes('Matrimonio') &&
+        !o.value.includes('Maternidad') &&
+        !o.value.includes('Nacimiento') &&
+        !o.value.includes('Adopción')
+      );
+      if (generica) {
+        selLicencia.value = generica.value;
+        selLicencia.dispatchEvent(new Event('change'));
+      }
+      inputFechaInicio.value = ultima.fechaRetorno;
+      inputCantidad.value = '';
+      document.getElementById('seccionLicencias').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function exportarCadenaCSV() {
+      if (licenciasEncadenadas.length === 0) { mostrarError('No hay licencias en la cadena.'); return; }
+      let csv = '\uFEFF#;Tipo;Inicio;Fin;Retorno;Días;Modalidad\n';
+      licenciasEncadenadas.forEach((l, i) => {
+        csv += `${i + 1};"${l.tipo}";"${formatearFechaCorta(fechaDesdeYMD(l.fechaInicio))}";"${formatearFechaCorta(fechaDesdeYMD(l.fechaFin))}";"${formatearFechaCorta(fechaDesdeYMD(l.fechaRetorno))}";"${l.dias} ${l.tipoDia === 'H' ? 'hábiles' : 'corridos'}";"${l.modo || ''}"\n`;
+      });
+      const ultima = licenciasEncadenadas[licenciasEncadenadas.length - 1];
+      csv += `;;Desde;${formatearFechaCorta(fechaDesdeYMD(licenciasEncadenadas[0].fechaInicio))};Hasta;${formatearFechaCorta(fechaDesdeYMD(ultima.fechaRetorno))};Total;${licenciasEncadenadas.reduce((s,l)=>s+l.dias,0)} días\n`;
+      descargarTXT(`cadena-licencias-${yyyyMMdd(new Date())}.csv`, csv);
+    }
+
+    function imprimirResultado(titulo, contenido) {
+      const divImpresion = document.getElementById('impresionResultado');
+      divImpresion.innerHTML = `
+        <div style="font-family:Arial, sans-serif; padding:2rem; max-width:800px; margin:0 auto;">
+          <h1 style="color:#1e40af;">${titulo}</h1>
+          <p style="color:#64748b;">Generado el ${formatearFechaHora()}</p>
+          <hr style="border:none; border-top:1px solid #cbd5e1; margin:1rem 0;">
+          ${contenido}
+          <hr style="border:none; border-top:1px solid #cbd5e1; margin:1rem 0;">
+          <p style="font-size:0.85rem; color:#64748b;">Calculadora orientativa. Verificar con SADOP, UDAI o sindicato de referencia.</p>
+        </div>
+      `;
+      divImpresion.style.display = 'block';
+      window.print();
+      divImpresion.style.display = 'none';
+      divImpresion.innerHTML = '';
+    }
+
+    // === UI ===
+    const selLicencia = document.getElementById('licencia');
+    const selSituacion = document.getElementById('situacion');
+    const inputFechaInicio = document.getElementById('fechaInicio');
+    const inputCantidad = document.getElementById('cantidadDias');
+    const inputFeriados = document.getElementById('feriados');
+    const inputInicioVerano = document.getElementById('inicioVerano');
+    const inputFinVerano = document.getElementById('finVerano');
+    const inputInicioInvierno = document.getElementById('inicioInvierno');
+    const inputFinInvierno = document.getElementById('finInvierno');
+    const checkboxConsiderarVacaciones = document.getElementById('considerarVacaciones');
+    const selectAntiguedadVacaciones = document.getElementById('antiguedadVacaciones');
+    const selectPrimerDiaHabil = document.getElementById('primerDiaHabil');
+    const btnCalcular = document.getElementById('calcular');
+    const divResultado = document.getElementById('resultado');
+    const divFechaRetorno = document.getElementById('fechaRetorno');
+    const divUltimoDia = document.getElementById('ultimoDiaLicencia');
+    const divDetalle = document.getElementById('detalleResultado');
+
+    // Cadena de licencias
+    let licenciasEncadenadas = [];
+    let ultimoCalculo = null;
+    const divCadena = document.getElementById('cadenaLicencias');
+    const divListaCadena = document.getElementById('listaCadenaLicencias');
+    const divResumenCadena = document.getElementById('resumenCadenaLicencias');
+
+    // Secciones dinámicas
+    const secMatrimonio = document.getElementById('seccionMatrimonio');
+    const secMaternidad = document.getElementById('seccionMaternidad');
+    const secOpcionesCABAMaternidad = document.getElementById('opcionesCABAMaternidad');
+    const ayudaMaternidad = document.getElementById('ayudaMaternidad');
+    const secNacimientoNoGestante = document.getElementById('seccionNacimientoNoGestante');
+    const secFechaInicio = document.getElementById('seccionFechaInicio');
+
+    const selJurisdiccion = document.getElementById('jurisdiccion');
+    const ayudaJurisdiccion = document.getElementById('ayudaJurisdiccion');
+
+    function poblarSelectorLicencias() {
+      selLicencia.innerHTML = '';
+      tiposUnicos.forEach(tipo => {
+        const opt = document.createElement('option');
+        opt.value = tipo;
+        opt.textContent = tipo;
+        selLicencia.appendChild(opt);
+      });
+    }
+
+    function aplicarConfiguracionJurisdiccion() {
+      const subtitulo = document.getElementById('subtituloHeader');
+      if (jurisdiccion === 'CABA') {
+        if (subtitulo) subtitulo.textContent = 'Estatuto Docente de CABA';
+
+        ayudaJurisdiccion.textContent = 'Datos basados en el Estatuto del Docente de CABA (Ordenanza 40.593, texto consolidado por Ley 6.347 y Decreto 313/24). El cálculo es orientativo.';
+        selectAntiguedadVacaciones.innerHTML = `
+          <option value="30" selected>30 días hábiles (receso escolar de verano)</option>
+          <option value="personalizado">Personalizado (usar fechas de arriba)</option>
+        `;
+        document.querySelector('label[for="antiguedadVacaciones"]').textContent = 'Vacaciones anuales de verano';
+      } else {
+        if (subtitulo) subtitulo.textContent = 'Estatuto Docente y Decreto 140/2022 - PBA';
+        ayudaJurisdiccion.textContent = 'Datos basados en el Estatuto Docente (Capítulo XX) y el Decreto 140/2022.';
+        selectAntiguedadVacaciones.innerHTML = `
+          <option value="30">Menos de 20 años - 30 días corridos (2/1 al 31/1)</option>
+          <option value="40">20 o más años - 40 días corridos (2/1 al 10/2)</option>
+          <option value="personalizado">Personalizado (usar fechas de arriba)</option>
+        `;
+        document.querySelector('label[for="antiguedadVacaciones"]').textContent = 'Antigüedad para vacaciones anuales';
+      }
+    }
+
+    function cambiarJurisdiccion(nueva) {
+      cargarDatosJurisdiccion(nueva);
+      poblarSelectorLicencias();
+      aplicarConfiguracionJurisdiccion();
+      actualizarSituaciones();
+      // Limpiar fechas de verano para que se recalculen según la jurisdicción
+      inputInicioVerano.value = '';
+      inputFinVerano.value = '';
+      localStorage.setItem('jurisdiccionSeleccionada', nueva);
+    }
+
+    selJurisdiccion.addEventListener('change', () => cambiarJurisdiccion(selJurisdiccion.value));
+
+    // Cargar selector de licencias
+    poblarSelectorLicencias();
+
+    function actualizarSituaciones() {
+      const tipo = selLicencia.value;
+      const opciones = licencias.filter(l => l.tipo === tipo);
+      selSituacion.innerHTML = '';
+      opciones.forEach((l, index) => {
+        const opt = document.createElement('option');
+        opt.value = index;
+        const topeMeses = l.observaciones ? l.observaciones.match(/Tope:\s*(\d+\s*meses)/i) : null;
+        const textoDias = l.dias ? `${l.dias} ${l.tipoDia === 'H' ? 'hábiles' : l.tipoDia === 'C' ? 'corridos' : ''}` : 'sin días definidos';
+        opt.textContent = topeMeses ? `${l.situacion} — ${topeMeses[1]} (${textoDias})` : `${l.situacion} — ${textoDias}`;
+        selSituacion.appendChild(opt);
+      });
+      actualizarSecciones();
+    }
+
+    function actualizarSecciones() {
+      const tipo = selLicencia.value;
+      // Ocultar todas
+      secMatrimonio.classList.replace('seccion-visible','seccion-oculta');
+      secMatrimonio.classList.add('seccion-oculta');
+      secMaternidad.classList.replace('seccion-visible','seccion-oculta');
+      secMaternidad.classList.add('seccion-oculta');
+      secNacimientoNoGestante.classList.replace('seccion-visible','seccion-oculta');
+      secNacimientoNoGestante.classList.add('seccion-oculta');
+      secFechaInicio.classList.replace('seccion-oculta','seccion-visible');
+      secFechaInicio.classList.add('seccion-visible');
+
+      if (tipo.includes('Matrimonio')) {
+        secMatrimonio.classList.replace('seccion-oculta','seccion-visible');
+        secMatrimonio.classList.add('seccion-visible');
+        secFechaInicio.classList.replace('seccion-visible','seccion-oculta');
+        secFechaInicio.classList.add('seccion-oculta');
+      } else if (tipo.includes('Maternidad') || tipo.includes('Nacimiento múltiple') || tipo.includes('prematuro')) {
+        secMaternidad.classList.replace('seccion-oculta','seccion-visible');
+        secMaternidad.classList.add('seccion-visible');
+        secFechaInicio.classList.replace('seccion-visible','seccion-oculta');
+        secFechaInicio.classList.add('seccion-oculta');
+        if (jurisdiccion === 'CABA') {
+          secOpcionesCABAMaternidad.classList.replace('seccion-oculta','seccion-visible');
+          secOpcionesCABAMaternidad.classList.add('seccion-visible');
+          ayudaMaternidad.textContent = 'CABA: 45 días corridos previos + 120 días corridos posteriores. Podés agregar internación neonatal, licencia sin goce o transferir días al progenitor no gestante.';
+        } else {
+          secOpcionesCABAMaternidad.classList.replace('seccion-visible','seccion-oculta');
+          secOpcionesCABAMaternidad.classList.add('seccion-oculta');
+          ayudaMaternidad.textContent = 'Si no ponés la fecha real de nacimiento, se usa la FPP. Los días post-parto se ajustan para completar 135/150 días corridos en total.';
+        }
+      } else if (tipo.includes('Nacimiento - No Gestante')) {
+        secNacimientoNoGestante.classList.replace('seccion-oculta','seccion-visible');
+        secNacimientoNoGestante.classList.add('seccion-visible');
+        secFechaInicio.classList.replace('seccion-visible','seccion-oculta');
+        secFechaInicio.classList.add('seccion-oculta');
+      }
+    }
+
+    selLicencia.addEventListener('change', actualizarSituaciones);
+    selSituacion.addEventListener('change', actualizarSecciones);
+    actualizarSituaciones();
+
+    document.getElementById('diasPreviosMaternidad').addEventListener('change', function() {
+      const otro = document.getElementById('diasPreviosOtro');
+      if (this.value === 'otro') {
+        otro.classList.replace('seccion-oculta','seccion-visible');
+        otro.classList.add('seccion-visible');
+      } else {
+        otro.classList.replace('seccion-visible','seccion-oculta');
+        otro.classList.add('seccion-oculta');
+      }
+    });
+
+    const divMatrimonioPersonalizado = document.getElementById('matrimonioPersonalizado');
+    function actualizarMatrimonioPersonalizado() {
+      const modo = document.querySelector('input[name="modoMatrimonio"]:checked');
+      if (modo && modo.value === 'personalizado') {
+        divMatrimonioPersonalizado.classList.replace('seccion-oculta','seccion-visible');
+        divMatrimonioPersonalizado.classList.add('seccion-visible');
+      } else {
+        divMatrimonioPersonalizado.classList.replace('seccion-visible','seccion-oculta');
+        divMatrimonioPersonalizado.classList.add('seccion-oculta');
+      }
+    }
+    document.querySelectorAll('input[name="modoMatrimonio"]').forEach(radio => {
+      radio.addEventListener('change', actualizarMatrimonioPersonalizado);
+    });
+
+    function toggleInputCheckbox(checkboxId, inputId) {
+      const chk = document.getElementById(checkboxId);
+      const input = document.getElementById(inputId);
+      if (!chk || !input) return;
+      function actualizar() {
+        if (chk.checked) {
+          input.classList.replace('seccion-oculta','seccion-visible');
+          input.classList.add('seccion-visible');
+        } else {
+          input.classList.replace('seccion-visible','seccion-oculta');
+          input.classList.add('seccion-oculta');
+        }
+      }
+      chk.addEventListener('change', actualizar);
+      actualizar();
+    }
+    toggleInputCheckbox('altoRiesgoCABA', 'diasAltoRiesgoCABA');
+    toggleInputCheckbox('internacionNeonatalCABA', 'diasInternacionNeonatalCABA');
+
+    const divFechaInicio30CABA = document.getElementById('fechaInicio30DiasCABA');
+    function actualizarFechaInicio30CABA() {
+      const modo = document.querySelector('input[name="modoNacimiento"]:checked');
+      if (modo && modo.value === '30primeranioCABA') {
+        divFechaInicio30CABA.classList.replace('seccion-oculta','seccion-visible');
+        divFechaInicio30CABA.classList.add('seccion-visible');
+      } else {
+        divFechaInicio30CABA.classList.replace('seccion-visible','seccion-oculta');
+        divFechaInicio30CABA.classList.add('seccion-oculta');
+      }
+    }
+    document.querySelectorAll('input[name="modoNacimiento"]').forEach(radio => {
+      radio.addEventListener('change', actualizarFechaInicio30CABA);
+    });
+
+    btnCalcular.addEventListener('click', () => {
+      limpiarError();
+      const tipo = selLicencia.value;
+      const opciones = licencias.filter(l => l.tipo === tipo);
+      const licencia = opciones[selSituacion.value];
+      if (!licencia) return;
+
+      let adicionales = parseFeriadosAdicionales(inputFeriados.value);
+      const primerDiaHabil = selectPrimerDiaHabil.value === 'si';
+      const checkboxFeriadosVariables = document.getElementById('incluirFeriadosVariables');
+
+      // Determinar fecha de referencia para calcular vacaciones por defecto
+      let fechaReferencia = null;
+      if (tipo.includes('Matrimonio')) {
+        fechaReferencia = fechaDesdeInput(document.getElementById('fechaMatrimonio'));
+      } else if (tipo.includes('Maternidad') || tipo.includes('Nacimiento múltiple') || tipo.includes('prematuro')) {
+        fechaReferencia = fechaDesdeInput(document.getElementById('fechaFPP'));
+      } else if (tipo.includes('Nacimiento - No Gestante')) {
+        fechaReferencia = fechaDesdeInput(document.getElementById('fechaNacimientoNoGestante'));
+      } else {
+        fechaReferencia = fechaDesdeInput(inputFechaInicio);
+      }
+
+      // Vacaciones anuales: por defecto según el estatuto (2 de enero + 30/40 días) o personalizado
+      const modoVacaciones = selectAntiguedadVacaciones.value;
+      const recesos = [];
+      if (checkboxConsiderarVacaciones.checked) {
+        if (modoVacaciones === 'personalizado') {
+          const v = parseReceso(inputInicioVerano, inputFinVerano, 'Vacaciones anuales');
+          if (v) recesos.push(v);
+        } else if (fechaReferencia && (!inputInicioVerano.value || !inputFinVerano.value)) {
+          const diasVacaciones = parseInt(modoVacaciones) || 30;
+          const v = vacacionesPorDefecto(fechaReferencia, diasVacaciones, jurisdiccion === 'CABA', adicionales);
+          recesos.push({ ...v, nombre: 'Vacaciones anuales' });
+          inputInicioVerano.value = yyyyMMdd(v.inicio);
+          inputFinVerano.value = yyyyMMdd(v.fin);
+        } else {
+          const v = parseReceso(inputInicioVerano, inputFinVerano, 'Vacaciones anuales');
+          if (v) recesos.push(v);
+        }
+      }
+      const invierno = parseReceso(inputInicioInvierno, inputFinInvierno, 'Receso de invierno');
+      if (invierno) recesos.push(invierno);
+
+      // Agregar feriados variables automáticos (Carnaval, Semana Santa) para varios años
+      if (checkboxFeriadosVariables && checkboxFeriadosVariables.checked && fechaReferencia) {
+        const anioInicio = fechaReferencia.getFullYear();
+        const anioFin = anioInicio + 5;
+        for (let anio = anioInicio; anio <= anioFin; anio++) {
+          feriadosVariables(anio).forEach(f => adicionales.add(yyyyMMdd(f)));
+        }
+      }
+
+      let fechaInicio, ultimoDiaLicencia, modo, diasLicencia, listaDias, observacionesExtra = '';
+
+      // === CASO MATRIMONIO ===
+      if (tipo.includes('Matrimonio')) {
+        const fechaMatrimonio = fechaDesdeInput(document.getElementById('fechaMatrimonio'));
+        if (!fechaMatrimonio) { mostrarError('Ingresá la fecha del matrimonio.'); return; }
+        const modoMatrimonio = document.querySelector('input[name="modoMatrimonio"]:checked').value;
+        const cantidad = extraerNumero(licencia.dias) || parseInt(inputCantidad.value) || 12;
+        const tipoDia = licencia.tipoDia || 'H';
+
+        if (modoMatrimonio === 'despues') {
+          fechaInicio = clonarFecha(fechaMatrimonio);
+          ultimoDiaLicencia = sumarDiasHabiles(fechaInicio, cantidad, adicionales, true);
+          modo = `${cantidad} días hábiles a partir de la fecha del matrimonio`;
+        } else if (modoMatrimonio === 'antes') {
+          // La licencia termina el día hábil inmediatamente anterior al matrimonio
+          ultimoDiaLicencia = encontrarDiaHabilAnterior(fechaMatrimonio, adicionales);
+          fechaInicio = retrocederDiasHabiles(ultimoDiaLicencia, cantidad, adicionales);
+          modo = `${cantidad} días hábiles antes del matrimonio`;
+        } else if (modoMatrimonio === 'personalizado') {
+          const diasAntes = parseInt(document.getElementById('diasAntesMatrimonio').value) || 0;
+          const diasDespues = parseInt(document.getElementById('diasDespuesMatrimonio').value) || 0;
+          if (diasAntes === 0 && diasDespues === 0) {
+            mostrarError('Ingresá al menos un día antes o después del matrimonio.');
+            return;
+          }
+          diasLicencia = diasAntes + diasDespues;
+          // Días después: a partir del día hábil siguiente al matrimonio
+          if (diasDespues > 0) {
+            const diaDespuesMatrimonio = clonarFecha(fechaMatrimonio);
+            diaDespuesMatrimonio.setDate(diaDespuesMatrimonio.getDate() + 1);
+            ultimoDiaLicencia = sumarDiasHabiles(diaDespuesMatrimonio, diasDespues, adicionales, true);
+          } else {
+            ultimoDiaLicencia = encontrarDiaHabilAnterior(fechaMatrimonio, adicionales);
+          }
+          // Días antes: terminando el día hábil anterior al matrimonio
+          if (diasAntes > 0) {
+            const diaAntesMatrimonio = clonarFecha(fechaMatrimonio);
+            diaAntesMatrimonio.setDate(diaAntesMatrimonio.getDate() - 1);
+            fechaInicio = retrocederDiasHabiles(diaAntesMatrimonio, diasAntes, adicionales);
+          } else {
+            const diaDespuesMatrimonio = clonarFecha(fechaMatrimonio);
+            diaDespuesMatrimonio.setDate(diaDespuesMatrimonio.getDate() + 1);
+            fechaInicio = clonarFecha(diaDespuesMatrimonio);
+          }
+          modo = `${diasAntes} días hábiles antes y ${diasDespues} días hábiles después del matrimonio`;
+          listaDias = listarDiasHabiles(fechaInicio, diasLicencia, adicionales, true);
+        } else {
+          // Centrado: mitad antes y mitad después
+          const antes = Math.floor((cantidad - 1) / 2);
+          fechaInicio = retrocederDiasHabiles(fechaMatrimonio, antes + 1, adicionales);
+          ultimoDiaLicencia = sumarDiasHabiles(fechaInicio, cantidad, adicionales, true);
+          modo = `${cantidad} días hábiles alrededor del matrimonio`;
+        }
+        if (modoMatrimonio !== 'personalizado') {
+          diasLicencia = cantidad;
+          listaDias = listarDiasHabiles(fechaInicio, cantidad, adicionales, true);
+        }
+      }
+
+      // === CASO MATERNIDAD ===
+      else if (tipo.includes('Maternidad') || tipo.includes('Nacimiento múltiple') || tipo.includes('prematuro')) {
+        const fpp = fechaDesdeInput(document.getElementById('fechaFPP'));
+        if (!fpp) { mostrarError('Ingresá la fecha probable de parto (FPP).'); return; }
+
+        let diasPrevios = parseInt(document.getElementById('diasPreviosMaternidad').value);
+        if (document.getElementById('diasPreviosMaternidad').value === 'otro') {
+          diasPrevios = parseInt(document.getElementById('diasPreviosOtro').value);
+        }
+        if (jurisdiccion === 'PBA') {
+          if (isNaN(diasPrevios) || diasPrevios < 30 || diasPrevios > 45) {
+            mostrarError('Los días previos deben estar entre 30 y 45.'); return;
+          }
+        } else if (isNaN(diasPrevios) || diasPrevios < 0) {
+          mostrarError('Los días previos deben ser un número válido.'); return;
+        }
+
+        const fechaNacimientoInput = fechaDesdeInput(document.getElementById('fechaNacimiento'));
+        const fechaNacimiento = fechaNacimientoInput || clonarFecha(fpp);
+
+        // Opciones específicas de CABA
+        let diasAltoRiesgo = 0;
+        let diasInternacion = 0;
+        let agregarSinGoce = false;
+        let transferir30 = false;
+        if (jurisdiccion === 'CABA') {
+          if (document.getElementById('altoRiesgoCABA').checked) {
+            diasAltoRiesgo = parseInt(document.getElementById('diasAltoRiesgoCABA').value) || 0;
+          }
+          if (document.getElementById('internacionNeonatalCABA').checked) {
+            diasInternacion = parseInt(document.getElementById('diasInternacionNeonatalCABA').value) || 0;
+          }
+          agregarSinGoce = document.getElementById('licenciaSinGoceCABA').checked;
+          transferir30 = document.getElementById('transferirNoGestanteCABA').checked;
+        }
+
+        // Inicio = FPP - diasPrevios - diasAltoRiesgo
+        fechaInicio = clonarFecha(fpp);
+        fechaInicio.setDate(fechaInicio.getDate() - diasPrevios - diasAltoRiesgo);
+
+        // Total de días según licencia
+        let totalDias = extraerNumero(licencia.dias) || (jurisdiccion === 'CABA' ? 165 : 135);
+        if (jurisdiccion === 'PBA' && (tipo.includes('múltiple') || tipo.includes('prematuro'))) totalDias = 150;
+
+        // Días posteriores = total - diasPrevios + internacion - transferencia
+        let diasPosteriores = totalDias - diasPrevios;
+        if (diasInternacion > 0) diasPosteriores += diasInternacion;
+        if (transferir30) diasPosteriores -= 30;
+
+        ultimoDiaLicencia = clonarFecha(fechaNacimiento);
+        ultimoDiaLicencia.setDate(ultimoDiaLicencia.getDate() + diasPosteriores);
+
+        diasLicencia = totalDias + diasInternacion - (transferir30 ? 30 : 0) + diasAltoRiesgo;
+        modo = `${diasLicencia} días corridos (${diasPrevios + diasAltoRiesgo} previos a la FPP + ${diasPosteriores} posteriores al nacimiento)`;
+
+        if (agregarSinGoce) {
+          ultimoDiaLicencia.setDate(ultimoDiaLicencia.getDate() + 120);
+          diasLicencia += 120;
+          modo += ' + 120 días corridos sin goce';
+          observacionesExtra = 'Se agregan 120 días corridos sin goce posteriores al período con goce íntegro.';
+        }
+
+        listaDias = listarDiasCorridos(fechaInicio, ultimoDiaLicencia);
+        if (jurisdiccion === 'PBA') {
+          observacionesExtra = 'Según Decreto 140/2022, la licencia pre-parto puede reducirse hasta 30 días, acumulándose los días al período post-parto (hasta 60 días máximo post-parto si se redujo a 30). Este cálculo respeta el total de 135/150 días corridos.';
+        }
+      }
+
+      // === CASO NACIMIENTO NO GESTANTE ===
+      else if (tipo.includes('Nacimiento - No Gestante')) {
+        const fechaNac = fechaDesdeInput(document.getElementById('fechaNacimientoNoGestante'));
+        if (!fechaNac) { mostrarError('Ingresá la fecha de nacimiento.'); return; }
+        const modoNac = document.querySelector('input[name="modoNacimiento"]:checked').value;
+
+        if (modoNac === '15despues') {
+          fechaInicio = clonarFecha(fechaNac);
+          ultimoDiaLicencia = sumarDiasCorridos(fechaInicio, 14); // 15 días corridos = inicio + 14
+          diasLicencia = 15;
+          modo = '15 días corridos posteriores al nacimiento';
+        } else if (modoNac === '15mas30caba') {
+          fechaInicio = clonarFecha(fechaNac);
+          ultimoDiaLicencia = sumarDiasCorridos(fechaInicio, 14); // 15 días corridos iniciales
+          diasLicencia = 15;
+          modo = '15 días corridos iniciales (CABA). Además, 30 días corridos no fraccionables en el primer año';
+          observacionesExtra = 'Según Estatuto Docente de CABA, además de los 15 días corridos iniciales, el progenitor no gestante tiene derecho a 30 días corridos no fraccionables e intransferibles en cualquier momento dentro del primer año de vida del niño/a.';
+        } else if (modoNac === '30primeranioCABA') {
+          const fechaInicio30 = fechaDesdeInput(document.getElementById('fechaInicio30CABA'));
+          if (!fechaInicio30) { mostrarError('Ingresá la fecha de inicio de los 30 días dentro del primer año.'); return; }
+          if (fechaInicio30 < fechaNac || fechaInicio30 > sumarDiasCorridos(fechaNac, 364)) {
+            mostrarError('La fecha de inicio de los 30 días debe estar dentro del primer año de vida.'); return;
+          }
+          fechaInicio = clonarFecha(fechaInicio30);
+          ultimoDiaLicencia = sumarDiasCorridos(fechaInicio, 29); // 30 días corridos
+          diasLicencia = 30;
+          modo = '30 días corridos no fraccionables dentro del primer año (CABA)';
+        } else {
+          fechaInicio = clonarFecha(fechaNac);
+          fechaInicio.setDate(fechaInicio.getDate() - 5);
+          ultimoDiaLicencia = sumarDiasCorridos(fechaNac, 9); // 5 antes + 10 después = 15 total
+          diasLicencia = 15;
+          modo = '5 días corridos antes y 10 días corridos después del nacimiento';
+        }
+        listaDias = listarDiasCorridos(fechaInicio, ultimoDiaLicencia);
+      }
+
+      // === CASOS GENERALES ===
+      else {
+        fechaInicio = fechaDesdeInput(inputFechaInicio);
+        if (!fechaInicio) { mostrarError('Seleccioná una fecha de inicio.'); return; }
+
+        const cantidadManual = inputCantidad.value.trim();
+        diasLicencia = cantidadManual ? parseInt(cantidadManual, 10) : extraerNumero(licencia.dias);
+
+        if (!diasLicencia || isNaN(diasLicencia) || diasLicencia <= 0) {
+          mostrarError('No se pudo determinar la cantidad de días. Ingresala manualmente.');
+          return;
+        }
+
+        let tipoDia = licencia.tipoDia;
+        if (cantidadManual && licencia.tipoDia !== 'C') tipoDia = 'H'; // Si ingresa manual, por defecto hábil, excepto licencias corridas que se pueden fraccionar
+
+        if (tipoDia === 'H') {
+          ultimoDiaLicencia = sumarDiasHabiles(fechaInicio, diasLicencia, adicionales, primerDiaHabil);
+          modo = `${diasLicencia} días hábiles`;
+          listaDias = listarDiasHabiles(fechaInicio, diasLicencia, adicionales, primerDiaHabil);
+        } else {
+          ultimoDiaLicencia = sumarDiasCorridos(fechaInicio, diasLicencia - 1);
+          modo = `${diasLicencia} días corridos`;
+          listaDias = listarDiasCorridos(fechaInicio, ultimoDiaLicencia);
+        }
+      }
+
+      // === MOSTRAR RESULTADO ===
+      // El retorno al trabajo es el siguiente día hábil escolar después del último día de licencia.
+      // Si hay vacaciones/receso de por medio, se posterga hasta después.
+      let fechaRetorno = siguienteDiaEscolar(ultimoDiaLicencia, adicionales, recesos);
+      const vacaciones = recesos.find(r => r.nombre === 'Vacaciones anuales');
+      if (vacaciones && vacaciones.fin > ultimoDiaLicencia) {
+        const despuesVacaciones = siguienteDiaHabil(vacaciones.fin, adicionales, recesos);
+        if (despuesVacaciones > fechaRetorno) fechaRetorno = despuesVacaciones;
+      }
+      divFechaRetorno.textContent = formatearFecha(fechaRetorno);
+      divUltimoDia.innerHTML = `<strong>Último día de licencia:</strong> ${formatearFecha(ultimoDiaLicencia)}`;
+
+      let html = `<ul>`;
+      html += `<li><strong>Licencia:</strong> ${licencia.tipo}</li>`;
+      html += `<li><strong>Situación:</strong> ${licencia.situacion}</li>`;
+      html += `<li><strong>Artículo:</strong> ${licencia.articulo}</li>`;
+      html += `<li><strong>Inicio:</strong> ${formatearFecha(fechaInicio)}</li>`;
+      html += `<li><strong>Cálculo:</strong> ${modo}</li>`;
+      html += `<li><strong>Total de días:</strong> ${diasLicencia}</li>`;
+      if (vacaciones) {
+        html += `<li><strong>Vacaciones anuales consideradas:</strong> del ${formatearFecha(vacaciones.inicio)} al ${formatearFecha(vacaciones.fin)}</li>`;
+      }
+      const recesoInvierno = recesos.find(r => r.nombre === 'Receso de invierno');
+      if (recesoInvierno) {
+        html += `<li><strong>Receso de invierno considerado:</strong> del ${formatearFecha(recesoInvierno.inicio)} al ${formatearFecha(recesoInvierno.fin)}</li>`;
+      }
+      if (licencia.goce100) html += `<li><strong>Con goce al 100%:</strong> ${licencia.goce100} ${licencia.cod100 ? `(${licencia.cod100})` : ''}</li>`;
+      if (licencia.goce50) html += `<li><strong>Con goce al 50%:</strong> ${licencia.goce50} ${licencia.cod50 ? `(${licencia.cod50})` : ''}</li>`;
+      if (licencia.sinGoce) html += `<li><strong>Sin goce:</strong> ${licencia.sinGoce} ${licencia.codSinGoce ? `(${licencia.codSinGoce})` : ''}</li>`;
+      if (licencia.observaciones) html += `<li><strong>Observaciones:</strong> ${licencia.observaciones}</li>`;
+      if (observacionesExtra) html += `<li><strong>Nota:</strong> ${observacionesExtra}</li>`;
+      html += `</ul>`;
+
+      html += `<h3>Resumen de días</h3>`;
+      const esCorrida = licencia.tipoDia === 'C';
+      const mostrarTodos = tipo.includes('Matrimonio') || licencia.tipoDia === 'H' || (inputCantidad.value.trim() && !tipo.includes('Maternidad') && !tipo.includes('Nacimiento'));
+      const diasParaTabla = mostrarTodos ? listarDiasCorridos(fechaInicio, ultimoDiaLicencia) : listaDias;
+      let numLicencia = 0;
+      let contFeriados = 0;
+      let contFinDeSemana = 0;
+      let contReceso = 0;
+      diasParaTabla.forEach((dia) => {
+        const habil = esDiaHabil(dia, adicionales);
+        const feriado = esFeriado(dia, adicionales);
+        const enReceso = esReceso(dia, recesos);
+        const finDeSemana = dia.getDay() === 0 || dia.getDay() === 6;
+        if (habil) numLicencia++;
+        if (feriado) contFeriados++;
+        if (finDeSemana) contFinDeSemana++;
+        if (enReceso) contReceso++;
+      });
+      html += `<div class="resumen-dias">`;
+      html += `<div class="caja"><span class="numero">${diasLicencia}</span><span class="etiqueta">Días de licencia</span></div>`;
+      html += `<div class="caja"><span class="numero">${diasParaTabla.length}</span><span class="etiqueta">Días corridos del período</span></div>`;
+      html += `<div class="caja"><span class="numero">${contFeriados}</span><span class="etiqueta">Feriados</span></div>`;
+      html += `<div class="caja"><span class="numero">${contFinDeSemana}</span><span class="etiqueta">Fines de semana</span></div>`;
+      if (contReceso > 0) {
+        html += `<div class="caja"><span class="numero">${contReceso}</span><span class="etiqueta">Días en receso / vacaciones</span></div>`;
+      }
+      html += `</div>`;
+
+      html += `<details style="margin-top:1rem;"><summary style="font-weight:700; color:var(--color-primario); cursor:pointer;">📅 Ver detalle de días</summary>`;
+      html += `<table class="tabla-dias"><thead><tr><th>N° lic.</th><th>Fecha</th><th>Día</th><th>Tipo</th></tr></thead><tbody>`;
+      let nroLicencia = 0;
+      diasParaTabla.forEach((dia) => {
+        const habil = esDiaHabil(dia, adicionales);
+        const feriado = esFeriado(dia, adicionales);
+        const enReceso = esReceso(dia, recesos);
+        const finDeSemana = dia.getDay() === 0 || dia.getDay() === 6;
+        let clase = habil ? 'dia-habil' : 'dia-no-habil';
+        let tipoTexto = habil ? 'Hábil' : (finDeSemana ? 'Fin de semana' : 'Feriado fijo');
+        if (feriado && !habil) {
+          clase = 'dia-feriado';
+          tipoTexto = finDeSemana ? 'Fin de semana / feriado' : 'Feriado';
+        }
+        if (habil && enReceso) {
+          tipoTexto = 'Receso escolar / Vacaciones (cuenta)';
+        }
+        let numCell = '-';
+        if (esCorrida || habil) {
+          nroLicencia++;
+          numCell = nroLicencia;
+        }
+        html += `<tr class="${clase}"><td>${numCell}</td><td>${formatearFechaCorta(dia)}</td><td>${dia.toLocaleDateString('es-AR', { weekday: 'long' })}</td><td>${tipoTexto}</td></tr>`;
+      });
+      html += `</tbody></table>`;
+      html += `<p><strong>Nota:</strong> ${esCorrida ? 'Se trata de días corridos de calendario: se incluyen sábados, domingos y feriados.' : 'Se consideran hábiles de lunes a viernes, excluyendo feriados fijos y los adicionales que cargues.'}</p></details>`;
+
+      divDetalle.innerHTML = html;
+      divResultado.classList.add('activo');
+
+      // Guardar en localStorage
+      ultimoCalculo = {
+        tipo: licencia.tipo,
+        situacion: licencia.situacion,
+        tipoDia: licencia.tipoDia,
+        fechaInicio: yyyyMMdd(fechaInicio),
+        fechaFin: yyyyMMdd(ultimoDiaLicencia),
+        fechaRetorno: yyyyMMdd(fechaRetorno),
+        dias: diasLicencia,
+        modo: modo || '',
+        html: html,
+        parametros: obtenerParametrosActuales()
+      };
+      localStorage.setItem('ultimoResultadoLicencia', JSON.stringify({
+        tipo: licencia.tipo,
+        situacion: licencia.situacion,
+        inicio: formatearFecha(fechaInicio),
+        ultimoDia: formatearFecha(ultimoDiaLicencia),
+        retorno: formatearFecha(fechaRetorno),
+        dias: diasLicencia,
+        html: html
+      }));
+
+      // Agregar al historial
+      agregarHistorial('licencia', `${licencia.tipo} — inicio ${formatearFecha(fechaInicio)}`, html);
+    });
+
+    function descargarTXT(nombre, contenido) {
+      const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function descargarCSV(nombre, filas) {
+      if (!filas || filas.length === 0) { mostrarError('No hay datos para exportar.'); return; }
+      const columnas = Object.keys(filas[0]);
+      const escapar = (valor) => {
+        const texto = String(valor != null ? valor : '');
+        if (texto.includes(';') || texto.includes('"') || texto.includes('\n')) {
+          return '"' + texto.replace(/"/g, '""') + '"';
+        }
+        return texto;
+      };
+      let csv = '\uFEFF' + columnas.map(escapar).join(';') + '\n';
+      filas.forEach(fila => {
+        csv += columnas.map(col => escapar(fila[col])).join(';') + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportarCargosCSV() {
+      const filas = [];
+      document.querySelectorAll('.item-cargo').forEach((item, i) => {
+        const inicio = item.querySelector('.cargo-inicio').value || '';
+        const fin = item.querySelector('.cargo-fin').value || '';
+        const noSuma = item.querySelector('.cargo-no-suma').checked ? 'Sí' : 'No';
+        if (!inicio && !fin) return;
+        filas.push({
+          'N°': i + 1,
+          'Inicio': inicio,
+          'Fin': fin || '(actual)',
+          'Suma antigüedad': noSuma === 'Sí' ? 'No' : 'Sí'
+        });
+      });
+      descargarCSV('cargos-docentes.csv', filas);
+    }
+
+    function exportarDescuentosCSV() {
+      const filas = [];
+      document.querySelectorAll('.item-descuento').forEach((item, i) => {
+        const inicio = item.querySelector('.descuento-inicio').value || '';
+        const fin = item.querySelector('.descuento-fin').value || '';
+        if (!inicio || !fin) return;
+        filas.push({
+          'N°': i + 1,
+          'Inicio': inicio,
+          'Fin': fin
+        });
+      });
+      descargarCSV('descuentos-antiguedad.csv', filas);
+    }
+
+    function exportarHistorialCSV(tipo) {
+      const clave = tipo === 'licencia' ? 'historialLicencias' : 'historialAntiguedad';
+      const historial = JSON.parse(localStorage.getItem(clave) || '[]');
+      if (historial.length === 0) { mostrarError('El historial está vacío.'); return; }
+      const filas = historial.map((h, i) => ({
+        'N°': i + 1,
+        'Fecha': h.fecha,
+        'Título': h.titulo,
+        'Detalle': h.detalle ? h.detalle.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : ''
+      }));
+      descargarCSV(`historial-${tipo}.csv`, filas);
+    }
+
+    function exportarLicenciaCSV() {
+      const tipo = document.querySelector('#detalleResultado li strong')?.parentElement?.textContent?.replace('Licencia: ', '') || '';
+      const inicio = document.getElementById('detalleResultado').innerText.match(/Inicio:\s*(.+)/)?.[1] || '';
+      const calculo = document.getElementById('detalleResultado').innerText.match(/Cálculo:\s*(.+)/)?.[1] || '';
+      const total = document.getElementById('detalleResultado').innerText.match(/Total de días:\s*(\d+)/)?.[1] || '';
+      const ultimo = document.getElementById('ultimoDiaLicencia').textContent.replace('Último día de licencia: ', '');
+      const retorno = document.getElementById('fechaRetorno').textContent;
+      const filas = [{
+        'Licencia': tipo,
+        'Inicio': inicio,
+        'Cálculo': calculo,
+        'Total de días': total,
+        'Último día': ultimo,
+        'Retorno': retorno
+      }];
+      descargarCSV('licencia-docente.csv', filas);
+    }
+
+    document.getElementById('guardarLicencia').addEventListener('click', () => {
+      const retorno = document.getElementById('fechaRetorno').textContent;
+      const ultimo = document.getElementById('ultimoDiaLicencia').textContent;
+      const detalle = document.getElementById('detalleResultado').innerText;
+      const texto = `Calculadora de Licencias Docentes - PBA\n\n${ultimo}\nFecha de retorno al trabajo: ${retorno}\n\nDetalle:\n${detalle}`;
+      navigator.clipboard.writeText(texto).then(() => {
+        alert('Resultado copiado al portapapeles');
+      }).catch(() => {
+        descargarTXT('licencia-docente.txt', texto);
+        alert('Se descargó el resultado como archivo TXT porque no se pudo copiar al portapapeles.');
+      });
+    });
+
+    document.getElementById('imprimirLicencia').addEventListener('click', () => {
+      const retorno = document.getElementById('fechaRetorno').textContent;
+      const ultimo = document.getElementById('ultimoDiaLicencia').textContent;
+      const detalle = document.getElementById('detalleResultado').innerHTML;
+      const contenido = `
+        <h2>${ultimo}</h2>
+        <h3>Fecha de retorno al trabajo: ${retorno}</h3>
+        ${detalle}
+      `;
+      imprimirResultado('Cálculo de Licencia Docente', contenido);
+    });
+
+    // Fechas por defecto
+    inputFechaInicio.valueAsDate = new Date();
+
+    // ============================================================
+    // === PESTAÑAS ===
+    // ============================================================
+    const btnTabLicencias = document.getElementById('tabLicencias');
+    const btnTabAntiguedad = document.getElementById('tabAntiguedad');
+    const seccionLicencias = document.getElementById('seccionLicencias');
+    const seccionAntiguedad = document.getElementById('seccionAntiguedad');
+
+    function mostrarTab(tab) {
+      if (tab === 'licencias') {
+        seccionLicencias.style.display = 'block';
+        seccionAntiguedad.style.display = 'none';
+        btnTabLicencias.classList.add('activo');
+        btnTabAntiguedad.classList.remove('activo');
+        btnTabLicencias.style.background = 'var(--color-primario)';
+        btnTabAntiguedad.style.background = '#94a3b8';
+      } else {
+        seccionLicencias.style.display = 'none';
+        seccionAntiguedad.style.display = 'block';
+        btnTabLicencias.classList.remove('activo');
+        btnTabAntiguedad.classList.add('activo');
+        btnTabLicencias.style.background = '#94a3b8';
+        btnTabAntiguedad.style.background = 'var(--color-primario)';
+      }
+    }
+
+    btnTabLicencias.addEventListener('click', () => mostrarTab('licencias'));
+    btnTabAntiguedad.addEventListener('click', () => mostrarTab('antiguedad'));
+
+    // ============================================================
+    // === CALCULADORA DE ANTIGÜEDAD ===
+    // ============================================================
+    const listaCargos = document.getElementById('listaCargos');
+    const listaDescuentos = document.getElementById('listaDescuentos');
+    const btnAgregarCargo = document.getElementById('agregarCargo');
+    const btnAgregarDescuento = document.getElementById('agregarDescuento');
+    const btnCalcularAntiguedad = document.getElementById('calcularAntiguedad');
+    const divResultadoAntiguedad = document.getElementById('resultadoAntiguedad');
+    const divTextoAntiguedad = document.getElementById('textoAntiguedad');
+    const divDetalleAntiguedad = document.getElementById('detalleAntiguedad');
+
+    let contadorCargos = 0;
+    let contadorDescuentos = 0;
+
+    function crearItemCargo(id) {
+      const div = document.createElement('div');
+      div.className = 'item-cargo';
+      div.dataset.id = id;
+      div.innerHTML = `
+        <div class="fila">
+          <div>
+            <label>Inicio del cargo</label>
+            <input type="date" class="cargo-inicio" required>
+          </div>
+          <div>
+            <label>Fin del cargo (dejá vacío si es actual)</label>
+            <input type="date" class="cargo-fin">
+          </div>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" class="cargo-no-suma" id="cargoNoSuma${id}">
+          <label for="cargoNoSuma${id}">Este período NO suma antigüedad (sin goce, causa particular, etc.)</label>
+        </div>
+        <button type="button" class="btn-eliminar" onclick="this.closest('.item-cargo').remove()">Eliminar</button>
+      `;
+      return div;
+    }
+
+    function crearItemDescuento(id) {
+      const div = document.createElement('div');
+      div.className = 'item-descuento';
+      div.dataset.id = id;
+      div.innerHTML = `
+        <div class="fila">
+          <div>
+            <label>Inicio</label>
+            <input type="date" class="descuento-inicio" required>
+          </div>
+          <div>
+            <label>Fin</label>
+            <input type="date" class="descuento-fin" required>
+          </div>
+        </div>
+        <button type="button" class="btn-eliminar" onclick="this.closest('.item-descuento').remove()">Eliminar</button>
+      `;
+      return div;
+    }
+
+    btnAgregarCargo.addEventListener('click', () => {
+      contadorCargos++;
+      listaCargos.appendChild(crearItemCargo(contadorCargos));
+    });
+
+    btnAgregarDescuento.addEventListener('click', () => {
+      contadorDescuentos++;
+      listaDescuentos.appendChild(crearItemDescuento(contadorDescuentos));
+    });
+
+    // Agregar un cargo y un descuento por defecto
+    btnAgregarCargo.click();
+    btnAgregarDescuento.click();
+
+    function diasEntreFechas(inicio, fin) {
+      // Diferencia en días, inclusive: fin - inicio + 1
+      const msPorDia = 1000 * 60 * 60 * 24;
+      return Math.round((fin - inicio) / msPorDia) + 1;
+    }
+
+    function unirIntervalos(intervalos) {
+      if (intervalos.length === 0) return [];
+      const ordenados = intervalos.slice().sort((a, b) => a.inicio - b.inicio);
+      const unidos = [ordenados[0]];
+      for (let i = 1; i < ordenados.length; i++) {
+        const actual = ordenados[i];
+        const ultimo = unidos[unidos.length - 1];
+        if (actual.inicio <= sumarDiasCorridos(ultimo.fin, 1)) {
+          // Se superponen o son contiguos
+          if (actual.fin > ultimo.fin) ultimo.fin = actual.fin;
+        } else {
+          unidos.push(actual);
+        }
+      }
+      return unidos;
+    }
+
+    function restarDescuentos(intervalos, descuentos) {
+      // Para cada descuento, restar los días que caigan dentro de los intervalos
+      let diasARestar = 0;
+      for (const d of descuentos) {
+        for (const int of intervalos) {
+          const inicioDescuento = d.inicio > int.inicio ? d.inicio : int.inicio;
+          const finDescuento = d.fin < int.fin ? d.fin : int.fin;
+          if (inicioDescuento <= finDescuento) {
+            diasARestar += diasEntreFechas(inicioDescuento, finDescuento);
+          }
+        }
+      }
+      return diasARestar;
+    }
+
+    function diasATexto(totalDias, fechaReferencia = null) {
+      // Si hay fecha de referencia, calcula años/meses/días reales sumando los días a esa fecha.
+      // Si no, usa la aproximación 365/30.
+      if (fechaReferencia && totalDias > 0) {
+        const inicio = clonarFecha(fechaReferencia);
+        const fin = clonarFecha(inicio);
+        fin.setDate(fin.getDate() + totalDias - 1);
+        let anios = fin.getFullYear() - inicio.getFullYear();
+        let meses = fin.getMonth() - inicio.getMonth();
+        let dias = fin.getDate() - inicio.getDate();
+        if (dias < 0) {
+          meses--;
+          const diasMesAnterior = new Date(fin.getFullYear(), fin.getMonth(), 0).getDate();
+          dias += diasMesAnterior;
+        }
+        if (meses < 0) {
+          anios--;
+          meses += 12;
+        }
+        const partes = [];
+        if (anios > 0) partes.push(`${anios} año${anios !== 1 ? 's' : ''}`);
+        if (meses > 0) partes.push(`${meses} mes${meses !== 1 ? 'es' : ''}`);
+        if (dias > 0 || partes.length === 0) partes.push(`${dias} día${dias !== 1 ? 's' : ''}`);
+        return partes.join(', ');
+      }
+      const anios = Math.floor(totalDias / 365);
+      const resto = totalDias % 365;
+      const meses = Math.floor(resto / 30);
+      const dias = resto % 30;
+      const partes = [];
+      if (anios > 0) partes.push(`${anios} año${anios !== 1 ? 's' : ''}`);
+      if (meses > 0) partes.push(`${meses} mes${meses !== 1 ? 'es' : ''}`);
+      if (dias > 0 || partes.length === 0) partes.push(`${dias} día${dias !== 1 ? 's' : ''}`);
+      return partes.join(', ');
+    }
+
+    btnCalcularAntiguedad.addEventListener('click', () => {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+
+      // Leer cargos
+      const cargos = [];
+      document.querySelectorAll('.item-cargo').forEach(item => {
+        const inicio = fechaDesdeInput(item.querySelector('.cargo-inicio'));
+        const finInput = item.querySelector('.cargo-fin');
+        const fin = fechaDesdeInput(finInput) || hoy;
+        const noSuma = item.querySelector('.cargo-no-suma').checked;
+        if (!inicio) return;
+        if (inicio > fin) return;
+        cargos.push({ inicio, fin, noSuma });
+      });
+
+      // Leer descuentos
+      const descuentos = [];
+      document.querySelectorAll('.item-descuento').forEach(item => {
+        const inicio = fechaDesdeInput(item.querySelector('.descuento-inicio'));
+        const fin = fechaDesdeInput(item.querySelector('.descuento-fin'));
+        if (!inicio || !fin || inicio > fin) return;
+        descuentos.push({ inicio, fin });
+      });
+
+      // Filtrar cargos que suman
+      const cargosQueSuman = cargos.filter(c => !c.noSuma).map(c => ({ inicio: c.inicio, fin: c.fin }));
+
+      // Unir intervalos superpuestos
+      const intervalosUnidos = unirIntervalos(cargosQueSuman);
+
+      // Calcular días totales
+      let diasTotales = intervalosUnidos.reduce((sum, int) => sum + diasEntreFechas(int.inicio, int.fin), 0);
+
+      // Restar descuentos
+      const diasDescuento = restarDescuentos(intervalosUnidos, descuentos);
+      const diasNetos = Math.max(0, diasTotales - diasDescuento);
+
+      // Mostrar resultado
+      const fechaMasAntigua = intervalosUnidos.length > 0 ? intervalosUnidos[0].inicio : null;
+      divTextoAntiguedad.textContent = diasATexto(diasNetos, fechaMasAntigua);
+
+      let html = `<ul>`;
+      html += `<li><strong>Cargos ingresados:</strong> ${cargos.length}</li>`;
+      html += `<li><strong>Cargos que suman:</strong> ${cargosQueSuman.length}</li>`;
+      html += `<li><strong>Períodos unidos (sin superposición):</strong> ${intervalosUnidos.length}</li>`;
+      html += `<li><strong>Días brutos:</strong> ${diasTotales}</li>`;
+      html += `<li><strong>Días descontados:</strong> ${diasDescuento}</li>`;
+      html += `<li><strong>Días netos:</strong> ${diasNetos}</li>`;
+      html += `</ul>`;
+
+      if (intervalosUnidos.length > 0) {
+        html += `<h3>Períodos que suman</h3>`;
+        html += `<ul>`;
+        intervalosUnidos.forEach(int => {
+          html += `<li>Del ${formatearFecha(int.inicio)} al ${formatearFecha(int.fin)} (${diasEntreFechas(int.inicio, int.fin)} días)</li>`;
+        });
+        html += `</ul>`;
+      }
+
+      html += `<p><strong>Nota:</strong> el cálculo se realiza en días corridos (incluye fines de semana y feriados).</p>`;
+
+      divDetalleAntiguedad.innerHTML = html;
+      divResultadoAntiguedad.classList.add('activo');
+
+      // Guardar en localStorage
+      localStorage.setItem('ultimoResultadoAntiguedad', JSON.stringify({
+        texto: divTextoAntiguedad.textContent,
+        html: html
+      }));
+
+      // Agregar al historial
+      agregarHistorial('antiguedad', `Antigüedad: ${divTextoAntiguedad.textContent}`, html);
+    });
+
+    document.getElementById('guardarAntiguedad').addEventListener('click', () => {
+      const texto = document.getElementById('textoAntiguedad').textContent;
+      const detalle = document.getElementById('detalleAntiguedad').innerText;
+      const copia = `Calculadora de Antigüedad Docente - PBA\n\nAntigüedad reconocida: ${texto}\n\nDetalle:\n${detalle}`;
+      navigator.clipboard.writeText(copia).then(() => {
+        alert('Resultado copiado al portapapeles');
+      }).catch(() => {
+        descargarTXT('antiguedad-docente.txt', copia);
+        alert('Se descargó el resultado como archivo TXT porque no se pudo copiar al portapapeles.');
+      });
+    });
+
+    document.getElementById('imprimirAntiguedad').addEventListener('click', () => {
+      const texto = document.getElementById('textoAntiguedad').textContent;
+      const detalle = document.getElementById('detalleAntiguedad').innerHTML;
+      const contenido = `<h2>Antigüedad reconocida: ${texto}</h2>${detalle}`;
+      imprimirResultado('Cálculo de Antigüedad Docente', contenido);
+    });
+
+    document.getElementById('limpiarHistorialLicencias').addEventListener('click', () => limpiarHistorial('licencia'));
+    document.getElementById('limpiarHistorialAntiguedad').addEventListener('click', () => limpiarHistorial('antiguedad'));
+    document.getElementById('exportarCargosCSV').addEventListener('click', exportarCargosCSV);
+    document.getElementById('exportarDescuentosCSV').addEventListener('click', exportarDescuentosCSV);
+    document.getElementById('exportarHistorialLicenciasCSV').addEventListener('click', () => exportarHistorialCSV('licencia'));
+    document.getElementById('exportarHistorialAntiguedadCSV').addEventListener('click', () => exportarHistorialCSV('antiguedad'));
+    document.getElementById('exportarLicenciaCSV').addEventListener('click', exportarLicenciaCSV);
+    document.getElementById('agregarACadena').addEventListener('click', agregarACadena);
+    document.getElementById('continuarCadena').addEventListener('click', continuarCadena);
+    document.getElementById('limpiarCadena').addEventListener('click', limpiarCadena);
+    document.getElementById('exportarCadenaCSV').addEventListener('click', exportarCadenaCSV);
+
+    // Guardar y restaurar datos del formulario de antigüedad
+    function guardarFormularioAntiguedad() {
+      const cargos = [];
+      document.querySelectorAll('.item-cargo').forEach(item => {
+        cargos.push({
+          inicio: item.querySelector('.cargo-inicio').value,
+          fin: item.querySelector('.cargo-fin').value,
+          noSuma: item.querySelector('.cargo-no-suma').checked
+        });
+      });
+      const descuentos = [];
+      document.querySelectorAll('.item-descuento').forEach(item => {
+        descuentos.push({
+          inicio: item.querySelector('.descuento-inicio').value,
+          fin: item.querySelector('.descuento-fin').value
+        });
+      });
+      localStorage.setItem('formularioAntiguedad', JSON.stringify({ cargos, descuentos }));
+    }
+
+    function restaurarFormularioAntiguedad() {
+      const guardado = localStorage.getItem('formularioAntiguedad');
+      if (!guardado) return;
+      try {
+        const datos = JSON.parse(guardado);
+        listaCargos.innerHTML = '';
+        listaDescuentos.innerHTML = '';
+        if (datos.cargos && datos.cargos.length > 0) {
+          datos.cargos.forEach(c => {
+            contadorCargos++;
+            const item = crearItemCargo(contadorCargos);
+            item.querySelector('.cargo-inicio').value = c.inicio || '';
+            item.querySelector('.cargo-fin').value = c.fin || '';
+            item.querySelector('.cargo-no-suma').checked = !!c.noSuma;
+            listaCargos.appendChild(item);
+          });
+        } else {
+          btnAgregarCargo.click();
+        }
+        if (datos.descuentos && datos.descuentos.length > 0) {
+          datos.descuentos.forEach(d => {
+            contadorDescuentos++;
+            const item = crearItemDescuento(contadorDescuentos);
+            item.querySelector('.descuento-inicio').value = d.inicio || '';
+            item.querySelector('.descuento-fin').value = d.fin || '';
+            listaDescuentos.appendChild(item);
+          });
+        } else {
+          btnAgregarDescuento.click();
+        }
+      } catch (e) {
+        console.error('Error al restaurar formulario de antigüedad', e);
+      }
+    }
+
+    listaCargos.addEventListener('change', guardarFormularioAntiguedad);
+    listaDescuentos.addEventListener('change', guardarFormularioAntiguedad);
+    listaCargos.addEventListener('click', () => setTimeout(guardarFormularioAntiguedad, 0));
+    listaDescuentos.addEventListener('click', () => setTimeout(guardarFormularioAntiguedad, 0));
+    restaurarFormularioAntiguedad();
+
+    // === EXPORTAR / IMPORTAR JSON ===
+    function obtenerConfiguracion() {
+      return {
+        jurisdiccion: jurisdiccion,
+        feriados: inputFeriados.value,
+        incluirFeriadosVariables: document.getElementById('incluirFeriadosVariables').checked,
+        considerarVacaciones: checkboxConsiderarVacaciones.checked,
+        antiguedadVacaciones: selectAntiguedadVacaciones.value,
+        inicioVerano: inputInicioVerano.value,
+        finVerano: inputFinVerano.value,
+        inicioInvierno: inputInicioInvierno.value,
+        finInvierno: inputFinInvierno.value
+      };
+    }
+
+    function aplicarConfiguracion(config) {
+      if (!config) return;
+      if (config.feriados !== undefined) inputFeriados.value = config.feriados;
+      const chkVariables = document.getElementById('incluirFeriadosVariables');
+      if (chkVariables && config.incluirFeriadosVariables !== undefined) chkVariables.checked = config.incluirFeriadosVariables;
+      if (config.considerarVacaciones !== undefined) checkboxConsiderarVacaciones.checked = config.considerarVacaciones;
+      if (config.antiguedadVacaciones !== undefined) selectAntiguedadVacaciones.value = config.antiguedadVacaciones;
+      if (config.inicioVerano !== undefined) inputInicioVerano.value = config.inicioVerano;
+      if (config.finVerano !== undefined) inputFinVerano.value = config.finVerano;
+      if (config.inicioInvierno !== undefined) inputInicioInvierno.value = config.inicioInvierno;
+      if (config.finInvierno !== undefined) inputFinInvierno.value = config.finInvierno;
+      localStorage.setItem('configCalculadora', JSON.stringify(config));
+    }
+
+    function exportarTodo() {
+      const datos = {
+        version: 1,
+        fecha: new Date().toISOString(),
+        historialLicencias: JSON.parse(localStorage.getItem('historialLicencias') || '[]'),
+        historialAntiguedad: JSON.parse(localStorage.getItem('historialAntiguedad') || '[]'),
+        formularioAntiguedad: JSON.parse(localStorage.getItem('formularioAntiguedad') || '{}'),
+        ultimoResultadoLicencia: JSON.parse(localStorage.getItem('ultimoResultadoLicencia') || 'null'),
+        ultimoResultadoAntiguedad: JSON.parse(localStorage.getItem('ultimoResultadoAntiguedad') || 'null'),
+        configuracion: obtenerConfiguracion()
+      };
+      const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `licencias-docentes-backup-${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function importarTodo(archivo) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const datos = JSON.parse(e.target.result);
+          if (datos.historialLicencias) localStorage.setItem('historialLicencias', JSON.stringify(datos.historialLicencias));
+          if (datos.historialAntiguedad) localStorage.setItem('historialAntiguedad', JSON.stringify(datos.historialAntiguedad));
+          if (datos.formularioAntiguedad) localStorage.setItem('formularioAntiguedad', JSON.stringify(datos.formularioAntiguedad));
+          if (datos.ultimoResultadoLicencia !== undefined) localStorage.setItem('ultimoResultadoLicencia', JSON.stringify(datos.ultimoResultadoLicencia));
+          if (datos.ultimoResultadoAntiguedad !== undefined) localStorage.setItem('ultimoResultadoAntiguedad', JSON.stringify(datos.ultimoResultadoAntiguedad));
+          if (datos.configuracion) localStorage.setItem('configCalculadora', JSON.stringify(datos.configuracion));
+          window.location.reload();
+        } catch (err) {
+          mostrarError('No se pudo importar el archivo. Asegurate de que sea un JSON válido generado por esta calculadora.');
+        }
+      };
+      reader.readAsText(archivo);
+    }
+
+    document.getElementById('exportarJSON').addEventListener('click', exportarTodo);
+    document.getElementById('importarJSON').addEventListener('click', () => document.getElementById('inputImportarJSON').click());
+    document.getElementById('inputImportarJSON').addEventListener('change', (e) => {
+      const archivo = e.target.files[0];
+      if (archivo) importarTodo(archivo);
+      e.target.value = '';
+    });
+
+    // Restaurar jurisdicción y configuración al cargar
+    const jurisdiccionGuardada = localStorage.getItem('jurisdiccionSeleccionada');
+    if (jurisdiccionGuardada && (jurisdiccionGuardada === 'PBA' || jurisdiccionGuardada === 'CABA')) {
+      selJurisdiccion.value = jurisdiccionGuardada;
+      cambiarJurisdiccion(jurisdiccionGuardada);
+    }
+    const configGuardada = localStorage.getItem('configCalculadora');
+    if (configGuardada) {
+      try { aplicarConfiguracion(JSON.parse(configGuardada)); } catch (e) {}
+    }
+
+    // Guardar configuración cuando cambia
+    [inputFeriados, checkboxConsiderarVacaciones, selectAntiguedadVacaciones, inputInicioVerano, inputFinVerano, inputInicioInvierno, inputFinInvierno].forEach(el => {
+      if (el) el.addEventListener('change', () => localStorage.setItem('configCalculadora', JSON.stringify(obtenerConfiguracion())));
+    });
+    const chkVariables = document.getElementById('incluirFeriadosVariables');
+    if (chkVariables) chkVariables.addEventListener('change', () => localStorage.setItem('configCalculadora', JSON.stringify(obtenerConfiguracion())));
+
+    mostrarHistorial('licencia');
+    mostrarHistorial('antiguedad');
+    cargarCadena();
+  </script>
+</body>
+</html>

@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema de gestión educativa MVP: docentes, licencias y reportes.">
+  <title>Sistema de Gestión Educativa - MVP</title>
+  <style>
+    :root {
+      --color-primario: #1e40af;
+      --color-primario-claro: #3b82f6;
+      --color-fondo: #f8fafc;
+      --color-texto: #1e293b;
+      --color-borde: #cbd5e1;
+      --color-tarjeta: #ffffff;
+      --color-ok: #10b981;
+      --color-info: #0ea5e9;
+      --color-advertencia: #f59e0b;
+      --color-peligro: #ef4444;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--color-fondo);
+      color: var(--color-texto);
+      margin: 0;
+      padding: 0;
+      line-height: 1.5;
+    }
+
+    header {
+      background: var(--color-primario);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    header h1 { margin: 0; font-size: 1.3rem; }
+
+    nav {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    nav button {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    nav button.activo, nav button:hover {
+      background: white;
+      color: var(--color-primario);
+    }
+
+    .contenedor {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    .tarjeta {
+      background: var(--color-tarjeta);
+      border: 1px solid var(--color-borde);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    h2 { margin-top: 0; color: var(--color-primario); }
+
+    label {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid var(--color-borde);
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      font-family: inherit;
+    }
+
+    .fila {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      .fila { grid-template-columns: 1fr; }
+      header { flex-direction: column; align-items: flex-start; }
+    }
+
+    button {
+      background: var(--color-primario);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:hover { background: var(--color-primario-claro); }
+
+    button.secundario { background: #64748b; }
+    button.peligro { background: var(--color-peligro); }
+    button.info { background: var(--color-info); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      border: 1px solid var(--color-borde);
+      padding: 0.6rem;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    th { background: #e2e8f0; }
+
+    .oculto { display: none !important; }
+
+    .mensaje {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .mensaje.ok { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+    .mensaje.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .mensaje.info { background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; }
+
+    .acciones { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge.pba { background: #dbeafe; color: #1e40af; }
+    .badge.caba { background: #f3e8ff; color: #6b21a8; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>🏫 Sistema de Gestión Educativa</h1>
+      <small id="nombreEscuelaHeader">Sin escuela configurada</small>
+    </div>
+    <nav>
+      <button data-vista="escuela" class="activo">Escuela</button>
+      <button data-vista="docentes">Docentes</button>
+      <button data-vista="licencias">Licencias</button>
+      <button data-vista="reportes">Reportes</button>
+    </nav>
+  </header>
+
+  <div class="contenedor">
+    <div id="mensajeGlobal"></div>
+
+    <!-- VISTA ESCUELA -->
+    <section id="vistaEscuela" class="vista">
+      <div class="tarjeta">
+        <h2>Datos de la escuela</h2>
+        <label for="nombreEscuela">Nombre de la escuela</label>
+        <input type="text" id="nombreEscuela" placeholder="Ej: Escuela Primaria N° 1">
+
+        <label for="jurisdiccionEscuela">Jurisdicción por defecto</label>
+        <select id="jurisdiccionEscuela">
+          <option value="PBA">Provincia de Buenos Aires (PBA)</option>
+          <option value="CABA">Ciudad Autónoma de Buenos Aires (CABA)</option>
+        </select>
+
+        <button id="guardarEscuela">Guardar datos</button>
+      </div>
+    </section>
+
+    <!-- VISTA DOCENTES -->
+    <section id="vistaDocentes" class="vista oculto">
+      <div class="tarjeta">
+        <h2>Docentes</h2>
+        <div id="formularioDocente">
+          <input type="hidden" id="docenteId">
+          <div class="fila">
+            <div>
+              <label for="docenteApellido">Apellido</label>
+              <input type="text" id="docenteApellido" placeholder="Ej: Gómez">
+            </div>
+            <div>
+              <label for="docenteNombre">Nombre</label>
+              <input type="text" id="docenteNombre" placeholder="Ej: María">
+            </div>
+          </div>
+          <div class="fila">
+            <div>
+              <label for="docenteDNI">DNI</label>
+              <input type="text" id="docenteDNI" placeholder="Ej: 12345678">
+            </div>
+            <div>
+              <label for="docenteCargo">Cargo</label>
+              <input type="text" id="docenteCargo" placeholder="Ej: Titular 1° grado">
+            </div>
+          </div>
+          <div class="fila">
+            <div>
+              <label for="docenteSituacion">Situación de revista</label>
+              <select id="docenteSituacion">
+                <option value="Titular">Titular</option>
+                <option value="Provisional">Provisional</option>
+                <option value="Suplente">Suplente</option>
+                <option value="Interino">Interino</option>
+              </select>
+            </div>
+            <div>
+              <label for="docenteJurisdiccion">Jurisdicción</label>
+              <select id="docenteJurisdiccion">
+                <option value="PBA">PBA</option>
+                <option value="CABA">CABA</option>
+              </select>
+            </div>
+          </div>
+          <div class="acciones">
+            <button id="guardarDocente">Guardar docente</button>
+            <button id="cancelarDocente" class="secundario oculto">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tarjeta">
+        <h3>Listado de docentes</h3>
+        <div id="tablaDocentes"></div>
+      </div>
+    </section>
+
+    <!-- VISTA LICENCIAS -->
+    <section id="vistaLicencias" class="vista oculto">
+      <div class="tarjeta">
+        <h2>Calcular licencia</h2>
+        <label for="licenciaDocente">Docente</label>
+        <select id="licenciaDocente"></select>
+
+        <label for="tipoLicencia">Tipo de licencia</label>
+        <select id="tipoLicencia"></select>
+
+        <div id="camposLicencia"></div>
+
+        <button id="calcularLicencia">Calcular licencia</button>
+
+        <div id="resultadoLicencia" style="margin-top:1rem;"></div>
+      </div>
+
+      <div class="tarjeta">
+        <h3>Licencias registradas</h3>
+        <div id="tablaLicencias"></div>
+      </div>
+    </section>
+
+    <!-- VISTA REPORTES -->
+    <section id="vistaReportes" class="vista oculto">
+      <div class="tarjeta">
+        <h2>Reporte de licencias</h2>
+        <div class="fila">
+          <div>
+            <label for="reporteDesde">Desde</label>
+            <input type="date" id="reporteDesde">
+          </div>
+          <div>
+            <label for="reporteHasta">Hasta</label>
+            <input type="date" id="reporteHasta">
+          </div>
+        </div>
+        <button id="generarReporte">Generar reporte</button>
+        <div id="resultadoReporte" style="margin-top:1rem;"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ===================== DATOS Y UTILIDADES =====================
+
+    const tiposLicencia = {
+      PBA: [
+        { tipo: 'Matrimonio', dias: 12, tipoDia: 'H', articulo: '114', modo: 'matrimonio' },
+        { tipo: 'Maternidad', dias: 135, tipoDia: 'C', articulo: '114', modo: 'maternidad', previos: [30,45] },
+        { tipo: 'Nacimiento - No Gestante', dias: 15, tipoDia: 'C', articulo: '114', modo: 'nacimiento' },
+        { tipo: 'Licencia Ordinaria por Enfermedad', dias: 120, tipoDia: 'C', articulo: '114', modo: 'generico' },
+        { tipo: 'Vacaciones Anuales', dias: 30, tipoDia: 'C', articulo: '114', modo: 'generico' }
+      ],
+      CABA: [
+        { tipo: 'Matrimonio', dias: 10, tipoDia: 'H', articulo: '69', modo: 'matrimonio' },
+        { tipo: 'Maternidad / Embarazo y nacimiento', dias: 165, tipoDia: 'C', articulo: '69', modo: 'maternidad', previos: [45] },
+        { tipo: 'Nacimiento - No Gestante', dias: 15, tipoDia: 'C', articulo: '69', modo: 'nacimiento' },
+        { tipo: 'Licencia Especial por Afecciones Comunes', dias: 45, tipoDia: 'C', articulo: '69', modo: 'generico' },
+        { tipo: 'Licencia Ordinaria Anual por Vacaciones', dias: 30, tipoDia: 'H', articulo: '68', modo: 'generico' }
+      ]
+    };
+
+    function clonarFecha(f) { return new Date(f.getFullYear(), f.getMonth(), f.getDate()); }
+
+    function formatearFecha(fecha) {
+      if (!fecha) return '';
+      return fecha.toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    function formatearFechaCorta(fecha) {
+      if (!fecha) return '';
+      return fecha.toLocaleDateString('es-AR');
+    }
+
+    function yyyyMMdd(fecha) {
+      return `${fecha.getFullYear()}-${String(fecha.getMonth()+1).padStart(2,'0')}-${String(fecha.getDate()).padStart(2,'0')}`;
+    }
+
+    function fechaDesdeInput(input) {
+      if (!input || !input.value) return null;
+      const [anio, mes, dia] = input.value.split('-').map(Number);
+      return new Date(anio, mes - 1, dia);
+    }
+
+    function esDiaHabil(fecha, feriados = new Set()) {
+      const diaSemana = fecha.getDay();
+      if (diaSemana === 0 || diaSemana === 6) return false;
+      const clave = `${String(fecha.getDate()).padStart(2,'0')}-${String(fecha.getMonth()+1).padStart(2,'0')}`;
+      if (feriados.has(clave)) return false;
+      return true;
+    }
+
+    function sumarDiasCorridos(fecha, dias) {
+      const f = clonarFecha(fecha);
+      f.setDate(f.getDate() + dias);
+      return f;
+    }
+
+    function sumarDiasHabiles(fecha, cantidad, feriados = new Set(), primerDiaHabil = true) {
+      const f = clonarFecha(fecha);
+      let sumados = 0;
+      if (primerDiaHabil && esDiaHabil(f, feriados)) sumados = 1;
+      while (sumados < cantidad) {
+        f.setDate(f.getDate() + 1);
+        if (esDiaHabil(f, feriados)) sumados++;
+      }
+      return f;
+    }
+
+    function retrocederDiasHabiles(fecha, cantidad, feriados = new Set()) {
+      const f = clonarFecha(fecha);
+      let restados = 0;
+      while (restados < cantidad) {
+        f.setDate(f.getDate() - 1);
+        if (esDiaHabil(f, feriados)) restados++;
+      }
+      return f;
+    }
+
+    function siguienteDiaHabil(fecha, feriados = new Set()) {
+      const f = clonarFecha(fecha);
+      do { f.setDate(f.getDate() + 1); } while (!esDiaHabil(f, feriados));
+      return f;
+    }
+
+    function guardarDatos(clave, datos) {
+      localStorage.setItem(clave, JSON.stringify(datos));
+    }
+
+    function cargarDatos(clave, defecto = []) {
+      const datos = localStorage.getItem(clave);
+      return datos ? JSON.parse(datos) : defecto;
+    }
+
+    function mostrarMensaje(texto, tipo = 'info') {
+      const div = document.getElementById('mensajeGlobal');
+      div.className = `mensaje ${tipo}`;
+      div.textContent = texto;
+      setTimeout(() => { div.className = ''; div.textContent = ''; }, 4000);
+    }
+
+    function generarId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    // ===================== ESTADO =====================
+
+    let escuela = cargarDatos('escuela', { nombre: '', jurisdiccion: 'PBA' });
+    let docentes = cargarDatos('docentes', []);
+    let licencias = cargarDatos('licenciasSistema', []);
+
+    // ===================== NAVEGACIÓN =====================
+
+    document.querySelectorAll('nav button[data-vista]').forEach(btn => {
+      btn.addEventListener('click', () => mostrarVista(btn.dataset.vista));
+    });
+
+    function mostrarVista(vista) {
+      document.querySelectorAll('.vista').forEach(v => v.classList.add('oculto'));
+      document.getElementById('vista' + capitalizar(vista)).classList.remove('oculto');
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('activo'));
+      document.querySelector(`nav button[data-vista="${vista}"]`).classList.add('activo');
+
+      if (vista === 'docentes') renderizarDocentes();
+      if (vista === 'licencias') {
+        actualizarSelectDocentes();
+        actualizarTiposLicencia();
+        renderizarLicencias();
+      }
+    }
+
+    function capitalizar(texto) {
+      return texto.charAt(0).toUpperCase() + texto.slice(1);
+    }
+
+    // ===================== ESCUELA =====================
+
+    const inputNombreEscuela = document.getElementById('nombreEscuela');
+    const selectJurisdiccionEscuela = document.getElementById('jurisdiccionEscuela');
+
+    function cargarEscuela() {
+      inputNombreEscuela.value = escuela.nombre || '';
+      selectJurisdiccionEscuela.value = escuela.jurisdiccion || 'PBA';
+      document.getElementById('nombreEscuelaHeader').textContent = escuela.nombre || 'Sin escuela configurada';
+    }
+
+    document.getElementById('guardarEscuela').addEventListener('click', () => {
+      escuela.nombre = inputNombreEscuela.value.trim();
+      escuela.jurisdiccion = selectJurisdiccionEscuela.value;
+      guardarDatos('escuela', escuela);
+      cargarEscuela();
+      mostrarMensaje('Datos de la escuela guardados.', 'ok');
+    });
+
+    // ===================== DOCENTES =====================
+
+    const inputDocenteId = document.getElementById('docenteId');
+    const inputDocenteApellido = document.getElementById('docenteApellido');
+    const inputDocenteNombre = document.getElementById('docenteNombre');
+    const inputDocenteDNI = document.getElementById('docenteDNI');
+    const inputDocenteCargo = document.getElementById('docenteCargo');
+    const selectDocenteSituacion = document.getElementById('docenteSituacion');
+    const selectDocenteJurisdiccion = document.getElementById('docenteJurisdiccion');
+
+    function limpiarFormularioDocente() {
+      inputDocenteId.value = '';
+      inputDocenteApellido.value = '';
+      inputDocenteNombre.value = '';
+      inputDocenteDNI.value = '';
+      inputDocenteCargo.value = '';
+      selectDocenteSituacion.value = 'Titular';
+      selectDocenteJurisdiccion.value = escuela.jurisdiccion || 'PBA';
+      document.getElementById('cancelarDocente').classList.add('oculto');
+    }
+
+    document.getElementById('guardarDocente').addEventListener('click', () => {
+      const docente = {
+        id: inputDocenteId.value || generarId(),
+        apellido: inputDocenteApellido.value.trim(),
+        nombre: inputDocenteNombre.value.trim(),
+        dni: inputDocenteDNI.value.trim(),
+        cargo: inputDocenteCargo.value.trim(),
+        situacion: selectDocenteSituacion.value,
+        jurisdiccion: selectDocenteJurisdiccion.value
+      };
+      if (!docente.apellido || !docente.nombre) {
+        mostrarMensaje('Apellido y nombre son obligatorios.', 'error');
+        return;
+      }
+      if (inputDocenteId.value) {
+        const idx = docentes.findIndex(d => d.id === docente.id);
+        if (idx >= 0) docentes[idx] = docente;
+      } else {
+        docentes.push(docente);
+      }
+      guardarDatos('docentes', docentes);
+      limpiarFormularioDocente();
+      renderizarDocentes();
+      mostrarMensaje('Docente guardado.', 'ok');
+    });
+
+    document.getElementById('cancelarDocente').addEventListener('click', () => {
+      limpiarFormularioDocente();
+    });
+
+    function renderizarDocentes() {
+      const contenedor = document.getElementById('tablaDocentes');
+      if (docentes.length === 0) {
+        contenedor.innerHTML = '<p>No hay docentes cargados.</p>';
+        return;
+      }
+      let html = '<table><thead><tr><th>Apellido y Nombre</th><th>DNI</th><th>Cargo</th><th>Situación</th><th>Jurisdicción</th><th>Acciones</th></tr></thead><tbody>';
+      [...docentes].sort((a,b) => a.apellido.localeCompare(b.apellido)).forEach(d => {
+        html += `<tr>
+          <td>${d.apellido}, ${d.nombre}</td>
+          <td>${d.dni || '-'}</td>
+          <td>${d.cargo || '-'}</td>
+          <td>${d.situacion}</td>
+          <td><span class="badge ${d.jurisdiccion.toLowerCase()}">${d.jurisdiccion}</span></td>
+          <td class="acciones">
+            <button class="secundario" onclick="editarDocente('${d.id}')">Editar</button>
+            <button class="peligro" onclick="eliminarDocente('${d.id}')">Eliminar</button>
+          </td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      contenedor.innerHTML = html;
+    }
+
+    window.editarDocente = function(id) {
+      const d = docentes.find(x => x.id === id);
+      if (!d) return;
+      inputDocenteId.value = d.id;
+      inputDocenteApellido.value = d.apellido;
+      inputDocenteNombre.value = d.nombre;
+      inputDocenteDNI.value = d.dni;
+      inputDocenteCargo.value = d.cargo;
+      selectDocenteSituacion.value = d.situacion;
+      selectDocenteJurisdiccion.value = d.jurisdiccion;
+      document.getElementById('cancelarDocente').classList.remove('oculto');
+    };
+
+    window.eliminarDocente = function(id) {
+      if (!confirm('¿Eliminar este docente?')) return;
+      docentes = docentes.filter(d => d.id !== id);
+      licencias = licencias.filter(l => l.docenteId !== id);
+      guardarDatos('docentes', docentes);
+      guardarDatos('licenciasSistema', licencias);
+      renderizarDocentes();
+      mostrarMensaje('Docente eliminado.', 'ok');
+    };
+
+    // ===================== LICENCIAS =====================
+
+    const selectLicenciaDocente = document.getElementById('licenciaDocente');
+    const selectTipoLicencia = document.getElementById('tipoLicencia');
+    const divCamposLicencia = document.getElementById('camposLicencia');
+
+    function actualizarSelectDocentes() {
+      selectLicenciaDocente.innerHTML = '<option value="">Seleccioná un docente</option>';
+      [...docentes].sort((a,b) => a.apellido.localeCompare(b.apellido)).forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = `${d.apellido}, ${d.nombre} (${d.jurisdiccion})`;
+        selectLicenciaDocente.appendChild(opt);
+      });
+    }
+
+    function obtenerJurisdiccionDocenteSeleccionado() {
+      const docente = docentes.find(d => d.id === selectLicenciaDocente.value);
+      return docente ? docente.jurisdiccion : 'PBA';
+    }
+
+    function actualizarTiposLicencia() {
+      const jurisdiccion = obtenerJurisdiccionDocenteSeleccionado();
+      selectTipoLicencia.innerHTML = '<option value="">Seleccioná un tipo</option>';
+      const lista = tiposLicencia[jurisdiccion] || [];
+      lista.forEach((l, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = `${l.tipo} — ${l.dias} ${l.tipoDia === 'H' ? 'hábiles' : 'corridos'}`;
+        selectTipoLicencia.appendChild(opt);
+      });
+      divCamposLicencia.innerHTML = '';
+    }
+
+    selectLicenciaDocente.addEventListener('change', () => {
+      actualizarTiposLicencia();
+      divCamposLicencia.innerHTML = '';
+    });
+
+    selectTipoLicencia.addEventListener('change', () => {
+      renderizarCamposLicencia();
+    });
+
+    function renderizarCamposLicencia() {
+      const jurisdiccion = obtenerJurisdiccionDocenteSeleccionado();
+      const lista = tiposLicencia[jurisdiccion] || [];
+      const tipo = lista[selectTipoLicencia.value];
+      if (!tipo) { divCamposLicencia.innerHTML = ''; return; }
+
+      let html = '';
+      if (tipo.modo === 'matrimonio') {
+        html += `<label for="fechaEvento">Fecha del matrimonio</label><input type="date" id="fechaEvento">`;
+        html += `<label>Modalidad</label>
+          <div style="display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;">
+            <label><input type="radio" name="modoEvento" value="despues" checked> Después</label>
+            <label><input type="radio" name="modoEvento" value="antes"> Antes</label>
+            <label><input type="radio" name="modoEvento" value="centrado"> Alrededor</label>
+          </div>`;
+      } else if (tipo.modo === 'maternidad') {
+        html += `<label for="fechaEvento">Fecha probable de parto (FPP)</label><input type="date" id="fechaEvento">`;
+        html += `<label for="diasPrevios">Días previos al parto</label>
+          <select id="diasPrevios">${tipo.previos.map(p => `<option value="${p}" ${p===45?'selected':''}>${p} días</option>`).join('')}</select>`;
+        html += `<label for="fechaNacimientoReal">Fecha real de nacimiento (opcional)</label><input type="date" id="fechaNacimientoReal">`;
+      } else if (tipo.modo === 'nacimiento') {
+        html += `<label for="fechaEvento">Fecha de nacimiento</label><input type="date" id="fechaEvento">`;
+        html += `<label>Modalidad</label>
+          <div style="display:flex; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;">
+            <label><input type="radio" name="modoEvento" value="15despues" checked> 15 días después</label>
+            <label><input type="radio" name="modoEvento" value="5antes10despues"> 5 antes + 10 después</label>
+          </div>`;
+      } else {
+        html += `<label for="fechaEvento">Fecha de inicio</label><input type="date" id="fechaEvento">`;
+        html += `<label for="cantidadDias">Cantidad de días</label><input type="number" id="cantidadDias" value="${tipo.dias}" min="1">`;
+      }
+      divCamposLicencia.innerHTML = html;
+    }
+
+    document.getElementById('calcularLicencia').addEventListener('click', () => {
+      const docente = docentes.find(d => d.id === selectLicenciaDocente.value);
+      const jurisdiccion = obtenerJurisdiccionDocenteSeleccionado();
+      const lista = tiposLicencia[jurisdiccion] || [];
+      const tipo = lista[selectTipoLicencia.value];
+
+      if (!docente) { mostrarMensaje('Seleccioná un docente.', 'error'); return; }
+      if (!tipo) { mostrarMensaje('Seleccioná un tipo de licencia.', 'error'); return; }
+
+      const feriados = new Set();
+      let fechaInicio, ultimoDia, retorno, diasLicencia, observaciones = '';
+
+      if (tipo.modo === 'matrimonio') {
+        const fechaMatrimonio = fechaDesdeInput(document.getElementById('fechaEvento'));
+        if (!fechaMatrimonio) { mostrarMensaje('Ingresá la fecha del matrimonio.', 'error'); return; }
+        const modo = document.querySelector('input[name="modoEvento"]:checked').value;
+        const cantidad = tipo.dias;
+        if (modo === 'despues') {
+          fechaInicio = clonarFecha(fechaMatrimonio);
+          ultimoDia = sumarDiasHabiles(fechaMatrimonio, cantidad, feriados, true);
+        } else if (modo === 'antes') {
+          const fin = clonarFecha(fechaMatrimonio);
+          do { fin.setDate(fin.getDate() - 1); } while (!esDiaHabil(fin, feriados));
+          fechaInicio = retrocederDiasHabiles(fin, cantidad - 1, feriados);
+          ultimoDia = fin;
+        } else {
+          const antes = Math.floor((cantidad - 1) / 2);
+          fechaInicio = retrocederDiasHabiles(fechaMatrimonio, antes + 1, feriados);
+          ultimoDia = sumarDiasHabiles(fechaMatrimonio, cantidad - antes - 1, feriados, false);
+        }
+        diasLicencia = cantidad;
+      } else if (tipo.modo === 'maternidad') {
+        const fpp = fechaDesdeInput(document.getElementById('fechaEvento'));
+        if (!fpp) { mostrarMensaje('Ingresá la FPP.', 'error'); return; }
+        const diasPrevios = parseInt(document.getElementById('diasPrevios').value) || 45;
+        const fechaNacReal = fechaDesdeInput(document.getElementById('fechaNacimientoReal')) || fpp;
+        const total = tipo.dias;
+        fechaInicio = clonarFecha(fpp);
+        fechaInicio.setDate(fechaInicio.getDate() - diasPrevios);
+        const diasPosteriores = total - diasPrevios;
+        ultimoDia = clonarFecha(fechaNacReal);
+        ultimoDia.setDate(ultimoDia.getDate() + diasPosteriores);
+        diasLicencia = total;
+        observaciones = `${diasPrevios} días previos + ${diasPosteriores} días posteriores.`;
+      } else if (tipo.modo === 'nacimiento') {
+        const fechaNac = fechaDesdeInput(document.getElementById('fechaEvento'));
+        if (!fechaNac) { mostrarMensaje('Ingresá la fecha de nacimiento.', 'error'); return; }
+        const modo = document.querySelector('input[name="modoEvento"]:checked').value;
+        if (modo === '15despues') {
+          fechaInicio = clonarFecha(fechaNac);
+          ultimoDia = sumarDiasCorridos(fechaNac, 14);
+          diasLicencia = 15;
+        } else {
+          fechaInicio = clonarFecha(fechaNac);
+          fechaInicio.setDate(fechaInicio.getDate() - 5);
+          ultimoDia = sumarDiasCorridos(fechaNac, 9);
+          diasLicencia = 15;
+        }
+      } else {
+        fechaInicio = fechaDesdeInput(document.getElementById('fechaEvento'));
+        if (!fechaInicio) { mostrarMensaje('Ingresá la fecha de inicio.', 'error'); return; }
+        diasLicencia = parseInt(document.getElementById('cantidadDias').value) || tipo.dias;
+        ultimoDia = sumarDiasCorridos(fechaInicio, diasLicencia - 1);
+      }
+
+      retorno = tipo.tipoDia === 'H' ? siguienteDiaHabil(ultimoDia, feriados) : sumarDiasCorridos(ultimoDia, 1);
+
+      const licencia = {
+        id: generarId(),
+        docenteId: docente.id,
+        docenteNombre: `${docente.apellido}, ${docente.nombre}`,
+        tipo: tipo.tipo,
+        articulo: tipo.articulo,
+        dias: diasLicencia,
+        tipoDia: tipo.tipoDia,
+        fechaInicio: yyyyMMdd(fechaInicio),
+        fechaFin: yyyyMMdd(ultimoDia),
+        fechaRetorno: yyyyMMdd(retorno),
+        observaciones: observaciones,
+        fechaRegistro: new Date().toISOString()
+      };
+
+      licencias.push(licencia);
+      guardarDatos('licenciasSistema', licencias);
+      renderizarLicencias();
+
+      document.getElementById('resultadoLicencia').innerHTML = `
+        <div class="mensaje ok">
+          <strong>Licencia guardada</strong><br>
+          Inicio: ${formatearFecha(fechaInicio)}<br>
+          Último día: ${formatearFecha(ultimoDia)}<br>
+          Retorno: ${formatearFecha(retorno)}
+        </div>
+      `;
+      mostrarMensaje('Licencia calculada y guardada.', 'ok');
+    });
+
+    function renderizarLicencias() {
+      const contenedor = document.getElementById('tablaLicencias');
+      if (licencias.length === 0) {
+        contenedor.innerHTML = '<p>No hay licencias registradas.</p>';
+        return;
+      }
+      let html = '<table><thead><tr><th>Docente</th><th>Tipo</th><th>Art.</th><th>Días</th><th>Inicio</th><th>Fin</th><th>Retorno</th><th>Acción</th></tr></thead><tbody>';
+      [...licencias].sort((a,b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro)).forEach(l => {
+        html += `<tr>
+          <td>${l.docenteNombre}</td>
+          <td>${l.tipo}</td>
+          <td>${l.articulo}</td>
+          <td>${l.dias} ${l.tipoDia === 'H' ? 'háb.' : 'corr.'}</td>
+          <td>${formatearFechaCorta(new Date(l.fechaInicio))}</td>
+          <td>${formatearFechaCorta(new Date(l.fechaFin))}</td>
+          <td>${formatearFechaCorta(new Date(l.fechaRetorno))}</td>
+          <td><button class="peligro" onclick="eliminarLicencia('${l.id}')">Eliminar</button></td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      contenedor.innerHTML = html;
+    }
+
+    window.eliminarLicencia = function(id) {
+      if (!confirm('¿Eliminar esta licencia?')) return;
+      licencias = licencias.filter(l => l.id !== id);
+      guardarDatos('licenciasSistema', licencias);
+      renderizarLicencias();
+      mostrarMensaje('Licencia eliminada.', 'ok');
+    };
+
+    // ===================== REPORTES =====================
+
+    document.getElementById('generarReporte').addEventListener('click', () => {
+      const desde = fechaDesdeInput(document.getElementById('reporteDesde'));
+      const hasta = fechaDesdeInput(document.getElementById('reporteHasta'));
+      if (!desde || !hasta) { mostrarMensaje('Ingresá el rango de fechas.', 'error'); return; }
+
+      const filtradas = licencias.filter(l => {
+        const inicio = new Date(l.fechaInicio);
+        const fin = new Date(l.fechaFin);
+        return (inicio >= desde && inicio <= hasta) || (fin >= desde && fin <= hasta) || (inicio <= desde && fin >= hasta);
+      });
+
+      const contenedor = document.getElementById('resultadoReporte');
+      if (filtradas.length === 0) {
+        contenedor.innerHTML = '<p class="mensaje info">No hay licencias en ese rango.</p>';
+        return;
+      }
+
+      let html = `<p><strong>Total de licencias:</strong> ${filtradas.length}</p>`;
+      html += '<table><thead><tr><th>Docente</th><th>Tipo</th><th>Inicio</th><th>Fin</th><th>Retorno</th></tr></thead><tbody>';
+      filtradas.sort((a,b) => new Date(a.fechaInicio) - new Date(b.fechaInicio)).forEach(l => {
+        html += `<tr>
+          <td>${l.docenteNombre}</td>
+          <td>${l.tipo}</td>
+          <td>${formatearFechaCorta(new Date(l.fechaInicio))}</td>
+          <td>${formatearFechaCorta(new Date(l.fechaFin))}</td>
+          <td>${formatearFechaCorta(new Date(l.fechaRetorno))}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      html += `<p style="margin-top:1rem;"><button class="info" onclick="exportarReporteCSV()">📄 Exportar CSV</button></p>`;
+      contenedor.innerHTML = html;
+    });
+
+    window.exportarReporteCSV = function() {
+      const desde = fechaDesdeInput(document.getElementById('reporteDesde'));
+      const hasta = fechaDesdeInput(document.getElementById('reporteHasta'));
+      const filtradas = licencias.filter(l => {
+        const inicio = new Date(l.fechaInicio);
+        const fin = new Date(l.fechaFin);
+        return (inicio >= desde && inicio <= hasta) || (fin >= desde && fin <= hasta) || (inicio <= desde && fin >= hasta);
+      }).sort((a,b) => new Date(a.fechaInicio) - new Date(b.fechaInicio));
+
+      let csv = '\uFEFFDocente;Tipo;Artículo;Días;Inicio;Fin;Retorno;Observaciones\n';
+      filtradas.forEach(l => {
+        csv += `"${l.docenteNombre}";"${l.tipo}";"${l.articulo}";"${l.dias} ${l.tipoDia === 'H' ? 'hábiles' : 'corridos'}";"${formatearFechaCorta(new Date(l.fechaInicio))}";"${formatearFechaCorta(new Date(l.fechaFin))}";"${formatearFechaCorta(new Date(l.fechaRetorno))}";"${l.observaciones || ''}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `reporte-licencias-${yyyyMMdd(new Date())}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
+    // ===================== INICIO =====================
+
+    cargarEscuela();
+    mostrarVista('escuela');
+  </script>
+</body>
+</html>

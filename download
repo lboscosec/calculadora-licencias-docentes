@@ -1,0 +1,22 @@
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Entornos
+.env
+node_modules/
+
+# Archivos temporales
+*.tmp
+*.out
+script_temp.js
+extraer_script.py
+extraer_script2.py
+nodecheck.js
+
+# Referencias locales no necesarias para publicar
+*.txt
+comparacion-apps-script-vs-web.md
